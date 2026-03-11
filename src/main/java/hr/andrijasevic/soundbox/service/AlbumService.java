@@ -51,12 +51,13 @@ public class AlbumService {
     }
 
     private AlbumDto mapReleaseToDto(MusicBrainzReleaseDto release) {
-        String artistName = null;
+        String artistName = "Unknown Artist";
         if (release.getArtistCredit() != null && !release.getArtistCredit().isEmpty()) {
             ArtistCreditDto credit = release.getArtistCredit().get(0);
-            artistName = credit.getName();
-            if (artistName == null && credit.getArtist() != null) {
+            if (credit.getArtist() != null && credit.getArtist().getName() != null) {
                 artistName = credit.getArtist().getName();
+            } else if (credit.getName() != null) {
+                artistName = credit.getName();
             }
         }
 
