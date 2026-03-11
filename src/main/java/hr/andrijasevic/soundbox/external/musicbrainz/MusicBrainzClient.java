@@ -1,17 +1,20 @@
 package hr.andrijasevic.soundbox.external.musicbrainz;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import hr.andrijasevic.soundbox.external.musicbrainz.dto.MusicBrainzAlbumResponse;
 import hr.andrijasevic.soundbox.external.musicbrainz.dto.MusicBrainzSearchResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-
-import java.util.List;
+import reactor.netty.http.client.HttpClient;
 
 @Service
 public class MusicBrainzClient {
+
+    private static final Logger log = LoggerFactory.getLogger(MusicBrainzClient.class);
 
     private final WebClient webClient;
     private final WebClient coverArtWebClient;
@@ -28,7 +31,9 @@ public class MusicBrainzClient {
                 .defaultHeader("Accept", "application/json")
                 .build();
 
-        this.coverArtWebClient = webClientBuilder
+        HttpClient httpClient = HttpClient.create().followRedirect(true);
+        this.coverArtWebClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .baseUrl(coverArtArchiveUrl)
                 .defaultHeader("User-Agent", userAgent)
                 .defaultHeader("Accept", "application/json")
@@ -71,31 +76,28 @@ public class MusicBrainzClient {
                     .bodyToMono(CoverArtResponse.class)
                     .block();
 
-            if (response == null || response.images == null) {
+            log.debug("Cover Art Archive response for {}: images={}", mbid,
+                    response != null && response.getImages() != null ? response.getImages().size() : "null");
+
+            if (response == null || response.getImages() == null || response.getImages().isEmpty()) {
                 return null;
             }
 
-            return response.images.stream()
-                    .filter(img -> img.front)
-                    .map(img -> img.image)
+            String url = response.getImages().stream()
+                    .filter(CoverArtImageDto::isFront)
+                    .map(CoverArtImageDto::getImage)
                     .findFirst()
-                    .orElse(null);
+                    .orElseGet(() -> response.getImages().get(0).getImage());
+
+            log.debug("Cover art URL resolved for {}: {}", mbid, url);
+            return url;
 
         } catch (WebClientResponseException e) {
+            log.debug("Cover Art Archive returned {} for mbid={}", e.getStatusCode(), mbid);
             return null;
         } catch (Exception e) {
+            log.debug("Cover Art Archive error for mbid={}: {}", mbid, e.getMessage());
             return null;
         }
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class CoverArtResponse {
-        public List<CoverArtImage> images;
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class CoverArtImage {
-        public boolean front;
-        public String image;
     }
 }

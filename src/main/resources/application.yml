@@ -28,3 +28,14 @@ musicbrainz:
   base-url: https://musicbrainz.org/ws/2
   user-agent: soundbox/1.0
   cover-art-url: https://coverartarchive.org
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    org.springdoc: DEBUG
+    root: INFO
