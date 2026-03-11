@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: soundbox
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/soundbox
+    username: soundbox
+    password: soundbox
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+jwt:
+  secret: moj-super-tajni-kljuc-koji-mora-biti-dovoljno-dugacak-za-hs256
+  expiration: 86400000
+
+  musicbrainz:
+    base-url: https://musicbrainz.org/ws/2
+    user-agent: soundbox/1.0
+
+  cover-art-archive:
+    url: https://coverartarchive.org
