@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Soundbox Test</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        input, button { padding: 8px; margin: 4px; }
+        button { cursor: pointer; background: #333; color: white; border: none; border-radius: 4px; }
+        .card { border: 1px solid #ddd; padding: 16px; margin: 8px 0; border-radius: 8px; display: flex; gap: 16px; align-items: flex-start; }
+        .card img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; }
+        .card img[src="null"], .card img:not([src]) { display: none; }
+        pre { background: #f4f4f4; padding: 12px; border-radius: 4px; font-size: 12px; overflow-x: auto; }
+        h2 { border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        #status { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h1>🎵 Soundbox</h1>
+<div id="status">Not logged in</div>
+
+<h2>Auth</h2>
+<input id="email" placeholder="Email" value="ante@test.com">
+<input id="password" placeholder="Password" type="password" value="password123">
+<button onclick="login()">Login</button>
+<button onclick="register()">Register</button>
+
+<h2>Search Albums</h2>
+<input id="query" placeholder="Search..." value="ok computer">
+<button onclick="search()">Search</button>
+<div id="results"></div>
+
+<h2>My Profile</h2>
+<button onclick="getMe()">Get My Profile</button>
+<pre id="profile"></pre>
+
+<h2>My Reviews</h2>
+<button onclick="getMyReviews()">Get My Reviews</button>
+<pre id="reviews"></pre>
+
+<script>
+    const API = 'http://localhost:8080';
+    let token = localStorage.getItem('token') || null;
+
+    if (token) document.getElementById('status').textContent = 'Logged in ✓';
+
+    async function request(method, path, body) {
+        const res = await fetch(API + path, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+            },
+            body: body ? JSON.stringify(body) : undefined
+        });
+        return res.json();
+    }
+
+    async function login() {
+        const data = await request('POST', '/api/auth/login', {
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+        });
+        if (data.token) {
+            token = data.token;
+            localStorage.setItem('token', token);
+            document.getElementById('status').textContent = 'Logged in as ' + data.username + ' ✓';
+        } else {
+            alert(JSON.stringify(data));
+        }
+    }
+
+    async function register() {
+        const data = await request('POST', '/api/auth/register', {
+            username: document.getElementById('email').value.split('@')[0],
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+        });
+        if (data.token) {
+            token = data.token;
+            localStorage.setItem('token', token);
+            document.getElementById('status').textContent = 'Registered as ' + data.username + ' ✓';
+        } else {
+            alert(JSON.stringify(data));
+        }
+    }
+
+    async function search() {
+        const query = document.getElementById('query').value;
+        const data = await request('GET', `/api/albums/search?query=${encodeURIComponent(query)}&limit=10`);
+        const html = data.map(album => `
+            <div class="card">
+                <img src="${album.coverArtUrl}" alt="cover">
+                <div>
+                    <strong>${album.title}</strong><br>
+                    <small>${album.artist} · ${album.releaseDate || 'N/A'}</small><br>
+                    <small style="color:#999">${album.mbid}</small><br>
+                    <button onclick="reviewAlbum('${album.mbid}', '${album.title.replace(/'/g, "\\'")}')">Review</button>
+                    <button onclick="logListen('${album.mbid}')">Log Listen</button>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('results').innerHTML = html;
+    }
+
+    async function reviewAlbum(mbid, title) {
+        const rating = prompt(`Rate "${title}" (0.5 - 5.0):`);
+        const text = prompt('Write a review:');
+        if (!rating) return;
+        const data = await request('POST', `/api/albums/${mbid}/reviews`, {
+            rating: parseFloat(rating),
+            text
+        });
+        alert('Review saved! ' + JSON.stringify(data));
+    }
+
+    async function logListen(mbid) {
+        const rating = prompt('Rating? (optional, 0.5-5.0, leave empty to skip):');
+        const body = rating ? { rating: parseFloat(rating) } : {};
+        const data = await request('POST', `/api/albums/${mbid}/log`, body);
+        alert('Listen logged! ' + JSON.stringify(data));
+    }
+
+    async function getMe() {
+        const data = await request('GET', '/api/users/me');
+        document.getElementById('profile').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function getMyReviews() {
+        const me = await request('GET', '/api/users/me');
+        const data = await request('GET', `/api/users/${me.id}/reviews`);
+        document.getElementById('reviews').textContent = JSON.stringify(data, null, 2);
+    }
+</script>
+</body>
+</html>

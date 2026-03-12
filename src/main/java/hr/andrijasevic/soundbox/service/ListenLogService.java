@@ -4,6 +4,7 @@ import hr.andrijasevic.soundbox.domain.Album;
 import hr.andrijasevic.soundbox.domain.ListenLog;
 import hr.andrijasevic.soundbox.domain.User;
 import hr.andrijasevic.soundbox.dto.ListenLogDto;
+import hr.andrijasevic.soundbox.dto.ListenLogRequest;
 import hr.andrijasevic.soundbox.repository.AlbumRepository;
 import hr.andrijasevic.soundbox.repository.ListenLogRepository;
 import hr.andrijasevic.soundbox.repository.UserRepository;
@@ -34,7 +35,18 @@ public class ListenLogService {
         this.listenLogRepository = listenLogRepository;
     }
 
-    public ListenLogDto logListen(String mbid, BigDecimal rating, String email) {
+
+    public Page<ListenLogDto> getListenLog(Long userId, Pageable pageable) {
+        return listenLogRepository.findByUserIdOrderByListenedAtDesc(userId, pageable).map(this::mapToDto);
+    }
+
+    public Page<ListenLogDto> getMyListenLog(String email, Pageable pageable) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return getListenLog(user.getId(), pageable);
+    }
+
+    public ListenLogDto logListen(String mbid, ListenLogRequest request, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -47,28 +59,32 @@ public class ListenLogService {
         listenLog.setUser(user);
         listenLog.setAlbum(album);
         listenLog.setListenedAt(LocalDateTime.now());
-        listenLog.setRating(rating);
+        listenLog.setRating(request.rating());
+        listenLog.setMood(request.mood());
+        listenLog.setContext(request.context());
+        listenLog.setIsFirstListen(request.isFirstListen());
+        listenLog.setNote(request.note());
+        listenLog.setFavoriteTrack(request.favoriteTrack());
 
         ListenLog saved = listenLogRepository.save(listenLog);
         return mapToDto(saved);
     }
 
-    public Page<ListenLogDto> getListenLog(Long userId, Pageable pageable) {
-        return listenLogRepository.findByUserIdOrderByListenedAtDesc(userId, pageable).map(this::mapToDto);
-    }
-
-    public Page<ListenLogDto> getMyListenLog(String email, Pageable pageable) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return getListenLog(user.getId(), pageable);
-    }
-
     private ListenLogDto mapToDto(ListenLog log) {
         Album album = log.getAlbum();
-        String albumMbid = album != null ? album.getMbid() : null;
-        String albumTitle = album != null ? album.getTitle() : null;
-        String coverArtUrl = album != null ? album.getCoverArtUrl() : null;
-        String artist = album != null && album.getArtist() != null ? album.getArtist().getName() : null;
-        return new ListenLogDto(log.getId(), albumMbid, albumTitle, coverArtUrl, artist, log.getListenedAt(), log.getRating());
+        return new ListenLogDto(
+                log.getId(),
+                album != null ? album.getMbid() : null,
+                album != null ? album.getTitle() : null,
+                album != null ? album.getCoverArtUrl() : null,
+                album != null && album.getArtist() != null ? album.getArtist().getName() : null,
+                log.getListenedAt(),
+                log.getRating(),
+                log.getMood(),
+                log.getContext(),
+                log.getIsFirstListen(),
+                log.getNote(),
+                log.getFavoriteTrack()
+        );
     }
 }

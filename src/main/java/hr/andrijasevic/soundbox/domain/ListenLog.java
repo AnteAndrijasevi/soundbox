@@ -31,4 +31,21 @@ public class ListenLog {
 
     @Column(precision = 3, scale = 1)
     private BigDecimal rating;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private Mood mood;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private ListenContext context;
+
+    @Column
+    private Boolean isFirstListen;
+
+    @Column(length = 500)
+    private String note;
+
+    @Column
+    private String favoriteTrack;
 }
