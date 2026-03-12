@@ -4,15 +4,8 @@ import hr.andrijasevic.soundbox.domain.ListenContext;
 import hr.andrijasevic.soundbox.domain.Mood;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-public record ListenLogDto(
-        Long id,
-        String albumMbid,
-        String albumTitle,
-        String albumCoverArtUrl,
-        String artist,
-        LocalDateTime listenedAt,
+public record ListenLogRequest(
         BigDecimal rating,
         Mood mood,
         ListenContext context,

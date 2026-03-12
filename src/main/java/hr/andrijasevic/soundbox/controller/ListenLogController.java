@@ -1,15 +1,13 @@
 package hr.andrijasevic.soundbox.controller;
 
 import hr.andrijasevic.soundbox.dto.ListenLogDto;
+import hr.andrijasevic.soundbox.dto.ListenLogRequest;
 import hr.andrijasevic.soundbox.service.ListenLogService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.util.Map;
 
 @RestController
 public class ListenLogController {
@@ -23,18 +21,11 @@ public class ListenLogController {
     @PostMapping("/api/albums/{mbid}/log")
     public ResponseEntity<ListenLogDto> logListen(
             @PathVariable String mbid,
-            @RequestBody(required = false) Map<String, Object> body
+            @RequestBody(required = false) ListenLogRequest request
     ) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        BigDecimal rating = null;
-        if (body != null && body.containsKey("rating")) {
-            try {
-                rating = new BigDecimal(body.get("rating").toString());
-            } catch (Exception e) {
-                // leave null if parsing fails
-            }
-        }
-        return ResponseEntity.ok(listenLogService.logListen(mbid, rating, email));
+        if (request == null) request = new ListenLogRequest(null, null, null, null, null, null);
+        return ResponseEntity.ok(listenLogService.logListen(mbid, request, email));
     }
 
     @GetMapping("/api/users/me/log")
