@@ -9,6 +9,7 @@ public record AlbumDto(
         String artist,
         String releaseDate,
         String coverArtUrl,
+        String artworkUrl,
         List<String> genres,
         String tracklist
 ) {}

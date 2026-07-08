@@ -33,6 +33,8 @@ public class Album {
 
     private String coverArtUrl;
 
+    private String artworkUrl;
+
     @ElementCollection
     @CollectionTable(name = "album_genres", joinColumns = @JoinColumn(name = "album_id"))
     @Column(name = "genre")

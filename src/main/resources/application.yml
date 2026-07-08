@@ -28,3 +28,6 @@ musicbrainz:
   base-url: https://musicbrainz.org/ws/2
   user-agent: soundbox/1.0
   cover-art-url: https://coverartarchive.org
+
+itunes:
+  base-url: https://itunes.apple.com
