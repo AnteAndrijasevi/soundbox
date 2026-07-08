@@ -90,6 +90,7 @@ public class FollowService {
                 review.getId(),
                 albumMbid,
                 albumTitle,
+                review.getUser() != null ? review.getUser().getId() : null,
                 username,
                 review.getRating(),
                 review.getText(),

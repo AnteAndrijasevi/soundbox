@@ -7,6 +7,7 @@ public record ReviewDto(
         Long id,
         String albumMbid,
         String albumTitle,
+        Long userId,
         String username,
         BigDecimal rating,
         String text,
