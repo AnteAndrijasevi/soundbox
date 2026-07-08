@@ -26,6 +26,9 @@ npm run dev --prefix frontend   # :5173, /api proxied to :8080
 ```
 
 Tests: `JAVA_HOME=$(/usr/libexec/java_home -v 23) ./mvnw test` (H2 via `application-test.yml`).
+59 tests: service-layer unit tests (Mockito) per service, plus `integration/` MockMvc
+tests covering auth, review upsert/validation, listen log, and follow/feed/like flows
+(external HTTP clients mocked via `@MockitoBean` in `BaseIntegrationTest`).
 
 ## Architecture notes
 
@@ -43,6 +46,9 @@ Tests: `JAVA_HOME=$(/usr/libexec/java_home -v 23) ./mvnw test` (H2 via `applicat
   → placeholder. Review/log/list DTO mappers coalesce artwork (iTunes preferred).
 - Ratings are 0.5–5.0 (DB CHECK + bean validation). Reviews upsert per (user, album).
 - Follow/like endpoints are blind toggles; DTOs don't report isFollowing/likedByMe yet.
+- `GlobalExceptionHandler` has a dedicated `MethodArgumentNotValidException` handler so
+  `@Valid` failures (bad rating, short password, blank required field) return 400 with a
+  field-level message; without it they fell through to the generic 500 handler.
 
 ## Conventions
 
@@ -54,7 +60,7 @@ Tests: `JAVA_HOME=$(/usr/libexec/java_home -v 23) ./mvnw test` (H2 via `applicat
 ## Roadmap (agreed priorities)
 
 1. ~~Frontend + iTunes cover art~~ (done: `feat/itunes-cover-art`, `feat/frontend`)
-2. Service-layer unit tests + MockMvc integration tests (external HTTP mocked)
+2. ~~Service-layer unit tests + MockMvc integration tests~~ (done: `feat/tests`)
 3. README (positioning: "sonic memory log / every user is a curator", screenshots)
 4. "Then vs Now" — relisten history endpoint (logs by user+album ordered by date) + UI diff
 5. Relisten nudge (logs ~365 days old) + profile surface
