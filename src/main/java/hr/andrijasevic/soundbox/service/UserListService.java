@@ -141,6 +141,11 @@ public class UserListService {
         );
     }
 
+    /** iTunes artwork is higher quality when present; Cover Art Archive is the fallback. */
+    private static String bestArtUrl(Album album) {
+        return album.getArtworkUrl() != null ? album.getArtworkUrl() : album.getCoverArtUrl();
+    }
+
     private UserListDetailDto mapToDetailDto(UserList list, List<ListItem> items) {
         String username = list.getUser() != null ? list.getUser().getDisplayUsername() : null;
         List<ListItemDto> itemDtos = items.stream().map(item -> {
@@ -148,7 +153,7 @@ public class UserListService {
             return new ListItemDto(
                     album != null ? album.getMbid() : null,
                     album != null ? album.getTitle() : null,
-                    album != null ? album.getCoverArtUrl() : null,
+                    album != null ? bestArtUrl(album) : null,
                     album != null && album.getArtist() != null ? album.getArtist().getName() : null,
                     item.getPosition(),
                     item.getNote()

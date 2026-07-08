@@ -70,13 +70,18 @@ public class ListenLogService {
         return mapToDto(saved);
     }
 
+    /** iTunes artwork is higher quality when present; Cover Art Archive is the fallback. */
+    private static String bestArtUrl(Album album) {
+        return album.getArtworkUrl() != null ? album.getArtworkUrl() : album.getCoverArtUrl();
+    }
+
     private ListenLogDto mapToDto(ListenLog log) {
         Album album = log.getAlbum();
         return new ListenLogDto(
                 log.getId(),
                 album != null ? album.getMbid() : null,
                 album != null ? album.getTitle() : null,
-                album != null ? album.getCoverArtUrl() : null,
+                album != null ? bestArtUrl(album) : null,
                 album != null && album.getArtist() != null ? album.getArtist().getName() : null,
                 log.getListenedAt(),
                 log.getRating(),
