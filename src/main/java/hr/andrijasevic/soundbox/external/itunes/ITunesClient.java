@@ -1,5 +1,6 @@
 package hr.andrijasevic.soundbox.external.itunes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hr.andrijasevic.soundbox.external.itunes.dto.ITunesSearchResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,15 +14,19 @@ public class ITunesClient {
     private static final Logger log = LoggerFactory.getLogger(ITunesClient.class);
 
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
 
     public ITunesClient(
             WebClient.Builder webClientBuilder,
+            ObjectMapper objectMapper,
             @Value("${itunes.base-url}") String baseUrl
     ) {
+        // iTunes answers with Content-Type text/javascript, so the body is fetched
+        // as a String and parsed manually instead of relying on WebClient's JSON codec
         this.webClient = webClientBuilder
                 .baseUrl(baseUrl)
-                .defaultHeader("Accept", "application/json")
                 .build();
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -36,7 +41,7 @@ public class ITunesClient {
                 ? artistName + " " + albumTitle
                 : albumTitle;
         try {
-            ITunesSearchResponse response = webClient.get()
+            String body = webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/search")
                             .queryParam("term", term)
@@ -45,8 +50,12 @@ public class ITunesClient {
                             .queryParam("limit", 5)
                             .build())
                     .retrieve()
-                    .bodyToMono(ITunesSearchResponse.class)
+                    .bodyToMono(String.class)
                     .block();
+
+            ITunesSearchResponse response = body != null
+                    ? objectMapper.readValue(body, ITunesSearchResponse.class)
+                    : null;
 
             if (response == null || response.getResults() == null || response.getResults().isEmpty()) {
                 return null;
