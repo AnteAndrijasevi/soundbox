@@ -3,6 +3,7 @@ package hr.andrijasevic.soundbox.controller;
 import hr.andrijasevic.soundbox.dto.ListenLogDto;
 import hr.andrijasevic.soundbox.dto.ListenLogRequest;
 import hr.andrijasevic.soundbox.service.ListenLogService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class ListenLogController {
     @PostMapping("/api/albums/{mbid}/log")
     public ResponseEntity<ListenLogDto> logListen(
             @PathVariable String mbid,
-            @RequestBody(required = false) ListenLogRequest request
+            @Valid @RequestBody(required = false) ListenLogRequest request
     ) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         if (request == null) request = new ListenLogRequest(null, null, null, null, null, null);

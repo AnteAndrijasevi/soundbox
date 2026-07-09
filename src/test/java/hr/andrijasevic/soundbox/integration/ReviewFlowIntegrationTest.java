@@ -113,8 +113,8 @@ class ReviewFlowIntegrationTest extends BaseIntegrationTest {
         String otherToken = registerAndGetToken("vera", "vera@example.com");
         mockMvc.perform(delete("/api/reviews/" + reviewId)
                         .header("Authorization", "Bearer " + otherToken))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Not authorized"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("Not authorized"));
 
         mockMvc.perform(delete("/api/reviews/" + reviewId)
                         .header("Authorization", "Bearer " + token))

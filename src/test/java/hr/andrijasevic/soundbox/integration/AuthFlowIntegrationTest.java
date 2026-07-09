@@ -34,8 +34,9 @@ class AuthFlowIntegrationTest extends BaseIntegrationTest {
                         .content("""
                                 {"username":"other","email":"ante@example.com","password":"password123"}
                                 """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Email already registered"));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("Email already registered"))
+                .andExpect(jsonPath("$.status").value(409));
     }
 
     @Test
@@ -45,7 +46,9 @@ class AuthFlowIntegrationTest extends BaseIntegrationTest {
                         .content("""
                                 {"username":"ante","email":"ante@example.com","password":"short"}
                                 """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Validation failed"))
+                .andExpect(jsonPath("$.errors.password").exists());
     }
 
     @Test
@@ -71,8 +74,8 @@ class AuthFlowIntegrationTest extends BaseIntegrationTest {
                         .content("""
                                 {"email":"ante@example.com","password":"wrong-password"}
                                 """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Invalid credentials"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.detail").value("Invalid credentials"));
     }
 
     @Test

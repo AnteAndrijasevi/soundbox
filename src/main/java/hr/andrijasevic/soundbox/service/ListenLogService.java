@@ -5,6 +5,7 @@ import hr.andrijasevic.soundbox.domain.ListenLog;
 import hr.andrijasevic.soundbox.domain.User;
 import hr.andrijasevic.soundbox.dto.ListenLogDto;
 import hr.andrijasevic.soundbox.dto.ListenLogRequest;
+import hr.andrijasevic.soundbox.exception.ResourceNotFoundException;
 import hr.andrijasevic.soundbox.repository.AlbumRepository;
 import hr.andrijasevic.soundbox.repository.ListenLogRepository;
 import hr.andrijasevic.soundbox.repository.UserRepository;
@@ -43,7 +44,7 @@ public class ListenLogService {
 
     public Page<ListenLogDto> getMyListenLog(String email, Pageable pageable) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return getListenLog(user.getId(), pageable);
     }
 
@@ -64,17 +65,18 @@ public class ListenLogService {
 
     public List<ListenLogDto> getMyRelistenHistory(String mbid, String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return getRelistenHistory(user.getId(), mbid);
     }
 
     public ListenLogDto logListen(String mbid, ListenLogRequest request, String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Album album = albumRepository.findByMbid(mbid).orElseGet(() -> {
             albumService.getAlbum(mbid);
-            return albumRepository.findByMbid(mbid).orElseThrow();
+            return albumRepository.findByMbid(mbid)
+                    .orElseThrow(() -> new ResourceNotFoundException("Album not found"));
         });
 
         ListenLog listenLog = new ListenLog();
