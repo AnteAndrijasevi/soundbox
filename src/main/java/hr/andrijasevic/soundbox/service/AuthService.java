@@ -4,6 +4,8 @@ import hr.andrijasevic.soundbox.domain.User;
 import hr.andrijasevic.soundbox.dto.AuthResponse;
 import hr.andrijasevic.soundbox.dto.LoginRequest;
 import hr.andrijasevic.soundbox.dto.RegisterRequest;
+import hr.andrijasevic.soundbox.exception.ConflictException;
+import hr.andrijasevic.soundbox.exception.UnauthorizedException;
 import hr.andrijasevic.soundbox.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,10 +25,10 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new RuntimeException("Email already registered");
+            throw new ConflictException("Email already registered");
         }
         if (userRepository.existsByUsername(request.username())) {
-            throw new RuntimeException("Username taken");
+            throw new ConflictException("Username taken");
         }
 
         User user = User.builder()
@@ -43,10 +45,10 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
         String token = jwtService.generateToken(user);

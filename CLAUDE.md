@@ -49,9 +49,12 @@ tests covering auth, review upsert/validation, listen log, and follow/feed/like 
   `GET /api/users/{id|me}/albums/{mbid}/history` (oldest-first); the frontend
   `RelistenHistory` component compares the earliest and latest and hides itself below 2 logs.
 - Follow/like endpoints are blind toggles; DTOs don't report isFollowing/likedByMe yet.
-- `GlobalExceptionHandler` has a dedicated `MethodArgumentNotValidException` handler so
-  `@Valid` failures (bad rating, short password, blank required field) return 400 with a
-  field-level message; without it they fell through to the generic 500 handler.
+- Errors are RFC 7807 `ProblemDetail` (`application/problem+json`). Services throw a typed
+  `ApiException` subclass (`exception/` package) — `ResourceNotFoundException` (404),
+  `ForbiddenException` (403), `ConflictException` (409), `UnauthorizedException` (401),
+  `BadRequestException` (400) — which `GlobalExceptionHandler` renders with the right status.
+  Validation failures add an `errors` map; unexpected exceptions log server-side and return a
+  bland 500. Frontend reads the `detail` field via `apiError()` in `frontend/src/api/index.js`.
 
 ## Conventions
 
@@ -69,3 +72,19 @@ tests covering auth, review upsert/validation, listen log, and follow/feed/like 
    to be captured from a real browser and dropped into a `docs/screenshots/` the user creates)
 4. ~~"Then vs Now" — relisten history endpoint + album-page UI diff~~ (done: `feat/relisten-history`)
 5. Relisten nudge (logs ~365 days old) + profile surface
+
+## Backend-maturity wave (in progress)
+
+1. ~~RFC 7807 ProblemDetail + typed exceptions + DTO validation~~ (done: `feat/problem-details`)
+2. ~~springdoc-openapi / Swagger UI~~ (done: `feat/swagger` — UI at `/swagger-ui.html`,
+   spec at `/api-docs`, JWT Authorize button, `@Tag`-grouped controllers)
+3. ~~Actuator + structured JSON logs + correlation/trace ID~~ (done: `feat/observability` —
+   `/actuator/health`+`/info` public, metrics/prometheus authed; `logback-spring.xml` JSON
+   under the `json` profile; `CorrelationIdFilter` → `X-Correlation-Id` in MDC + response)
+4. Testcontainers (real Postgres) for integration tests
+5. Resilience4j (circuit breaker + retry) around MusicBrainz/iTunes (+ cherry-pick CAA redirect fix)
+6. Redis cache (Spring Cache) for external lookups + Bucket4j rate limiting on auth
+7. Multi-stage Dockerfile + docker-compose (app + Postgres + Redis + Kafka)
+8. GitHub Actions CI (build + test)
+9. Kafka event-driven: listen logged → event → consumer builds feed/notifications
+10. Fly.io deploy config + instructions (final authenticated deploy is the user's)

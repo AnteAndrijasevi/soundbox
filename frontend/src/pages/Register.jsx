@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { apiError } from '../api';
 
 export default function Register() {
   const { register } = useAuth();
@@ -19,7 +20,7 @@ export default function Register() {
       await register({ username, email, password });
       navigate('/', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Registration failed — that username or email may be taken.');
+      setError(apiError(err, 'Registration failed — that username or email may be taken.'));
       setBusy(false);
     }
   };

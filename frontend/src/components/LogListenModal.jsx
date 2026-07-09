@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Modal from './Modal';
 import { StarInput } from './StarRating';
 import { MOODS, CONTEXTS, parseTracklist } from '../constants';
-import { logListen } from '../api';
+import { apiError, logListen } from '../api';
 
 /**
  * The heart of Soundbox: log a listen in under ten seconds.
@@ -35,7 +35,7 @@ export default function LogListenModal({ album, onClose, onLogged }) {
       onLogged?.(data);
       onClose();
     } catch (e) {
-      setError(e.response?.data?.message ?? 'Could not save your listen. Try again.');
+      setError(apiError(e, 'Could not save your listen. Try again.'));
       setSaving(false);
     }
   };

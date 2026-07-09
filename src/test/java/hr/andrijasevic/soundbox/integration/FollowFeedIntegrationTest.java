@@ -89,7 +89,7 @@ class FollowFeedIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/users/" + anteId + "/follow")
                         .header("Authorization", "Bearer " + anteToken))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Cannot follow yourself"));
+                .andExpect(jsonPath("$.detail").value("Cannot follow yourself"));
     }
 
     @Test

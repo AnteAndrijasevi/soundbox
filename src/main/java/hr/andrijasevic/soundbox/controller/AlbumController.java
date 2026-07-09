@@ -4,9 +4,11 @@ import hr.andrijasevic.soundbox.dto.AlbumDto;
 import hr.andrijasevic.soundbox.service.AlbumService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 
+@Tag(name = "Albums", description = "Search the catalogue and fetch album detail")
 @RestController
 @RequestMapping("/api/albums")
 public class AlbumController {

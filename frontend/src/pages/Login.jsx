@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { apiError } from '../api';
 
 export default function Login() {
   const { login } = useAuth();
@@ -19,7 +20,7 @@ export default function Login() {
       await login({ email, password });
       navigate(location.state?.from?.pathname ?? '/', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Login failed — check your email and password.');
+      setError(apiError(err, 'Login failed — check your email and password.'));
       setBusy(false);
     }
   };

@@ -8,6 +8,8 @@ import hr.andrijasevic.soundbox.dto.CreateListRequest;
 import hr.andrijasevic.soundbox.dto.ListItemDto;
 import hr.andrijasevic.soundbox.dto.UserListDetailDto;
 import hr.andrijasevic.soundbox.dto.UserListDto;
+import hr.andrijasevic.soundbox.exception.ForbiddenException;
+import hr.andrijasevic.soundbox.exception.ResourceNotFoundException;
 import hr.andrijasevic.soundbox.repository.AlbumRepository;
 import hr.andrijasevic.soundbox.repository.ListItemRepository;
 import hr.andrijasevic.soundbox.repository.UserListRepository;
@@ -42,7 +44,7 @@ public class UserListService {
 
     public UserListDto createList(CreateListRequest request, String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         UserList userList = new UserList();
         userList.setUser(user);
@@ -63,25 +65,26 @@ public class UserListService {
 
     public UserListDetailDto getListDetail(Long listId) {
         UserList list = userListRepository.findById(listId)
-                .orElseThrow(() -> new RuntimeException("List not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("List not found"));
         List<ListItem> items = listItemRepository.findByUserListIdOrderByPosition(listId);
         return mapToDetailDto(list, items);
     }
 
     public UserListDetailDto addAlbumToList(Long listId, String mbid, String note, String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         UserList list = userListRepository.findById(listId)
-                .orElseThrow(() -> new RuntimeException("List not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("List not found"));
 
         if (!list.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Not authorized");
+            throw new ForbiddenException("Not authorized");
         }
 
         Album album = albumRepository.findByMbid(mbid).orElseGet(() -> {
             albumService.getAlbum(mbid);
-            return albumRepository.findByMbid(mbid).orElseThrow();
+            return albumRepository.findByMbid(mbid)
+                    .orElseThrow(() -> new ResourceNotFoundException("Album not found"));
         });
 
         int position = listItemRepository.countByUserListId(listId) + 1;
@@ -98,30 +101,30 @@ public class UserListService {
 
     public void removeAlbumFromList(Long listId, String mbid, String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         UserList list = userListRepository.findById(listId)
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("List not found"));
 
         if (!list.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Not authorized");
+            throw new ForbiddenException("Not authorized");
         }
 
         Album album = albumRepository.findByMbid(mbid)
-                .orElseThrow(() -> new RuntimeException("Album not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Album not found"));
 
         listItemRepository.deleteByUserListIdAndAlbumId(listId, album.getId());
     }
 
     public void deleteList(Long listId, String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         UserList list = userListRepository.findById(listId)
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("List not found"));
 
         if (!list.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Not authorized");
+            throw new ForbiddenException("Not authorized");
         }
 
         userListRepository.delete(list);
