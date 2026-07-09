@@ -45,6 +45,9 @@ tests covering auth, review upsert/validation, listen log, and follow/feed/like 
 - Frontend `AlbumCover` component falls back: `artworkUrl` → `coverArtUrl` → CAA by-mbid URL
   → placeholder. Review/log/list DTO mappers coalesce artwork (iTunes preferred).
 - Ratings are 0.5–5.0 (DB CHECK + bean validation). Reviews upsert per (user, album).
+- Listen logs are append-only (the diary). "Then vs Now" reads them via
+  `GET /api/users/{id|me}/albums/{mbid}/history` (oldest-first); the frontend
+  `RelistenHistory` component compares the earliest and latest and hides itself below 2 logs.
 - Follow/like endpoints are blind toggles; DTOs don't report isFollowing/likedByMe yet.
 - `GlobalExceptionHandler` has a dedicated `MethodArgumentNotValidException` handler so
   `@Valid` failures (bad rating, short password, blank required field) return 400 with a
@@ -64,5 +67,5 @@ tests covering auth, review upsert/validation, listen log, and follow/feed/like 
 3. ~~README~~ (done: `feat/readme` — screenshots deliberately left as a TODO; the preview
    tooling here has no way to save a rendered screenshot to disk, so real screenshots need
    to be captured from a real browser and dropped into a `docs/screenshots/` the user creates)
-4. "Then vs Now" — relisten history endpoint (logs by user+album ordered by date) + UI diff
+4. ~~"Then vs Now" — relisten history endpoint + album-page UI diff~~ (done: `feat/relisten-history`)
 5. Relisten nudge (logs ~365 days old) + profile surface
