@@ -61,6 +61,8 @@ tests covering auth, review upsert/validation, listen log, and follow/feed/like 
 
 1. ~~Frontend + iTunes cover art~~ (done: `feat/itunes-cover-art`, `feat/frontend`)
 2. ~~Service-layer unit tests + MockMvc integration tests~~ (done: `feat/tests`)
-3. README (positioning: "sonic memory log / every user is a curator", screenshots)
+3. ~~README~~ (done: `feat/readme` — screenshots deliberately left as a TODO; the preview
+   tooling here has no way to save a rendered screenshot to disk, so real screenshots need
+   to be captured from a real browser and dropped into a `docs/screenshots/` the user creates)
 4. "Then vs Now" — relisten history endpoint (logs by user+album ordered by date) + UI diff
 5. Relisten nudge (logs ~365 days old) + profile surface
