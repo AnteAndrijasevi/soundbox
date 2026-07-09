@@ -98,7 +98,8 @@ the real Flyway migrations run and Hibernate validates the schema — production
 4. ~~Testcontainers (real Postgres) for integration tests~~ (done: `feat/testcontainers`)
 5. ~~Resilience4j (circuit breaker + retry) around MusicBrainz/iTunes + CAA redirect fix~~ (done: `feat/resilience`)
 6. ~~Redis cache (Spring Cache) for search + Bucket4j rate limiting on auth~~ (done: `feat/cache-ratelimit`)
-7. Multi-stage Dockerfile + docker-compose (app + Postgres + Redis + Kafka)
+7. ~~Multi-stage Dockerfile + docker-compose (app + Postgres + Redis)~~ (done: `feat/docker`;
+   `docker compose up --build`. Kafka added with the event feature.)
 8. GitHub Actions CI (build + test)
 9. Kafka event-driven: listen logged → event → consumer builds feed/notifications
 10. Fly.io deploy config + instructions (final authenticated deploy is the user's)

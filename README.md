@@ -29,6 +29,16 @@ _Coming soon — the app is fully functional and manually verified end-to-end (s
 
 ## Running it locally
 
+### Quickest: Docker Compose
+
+```bash
+docker compose up --build   # app + Postgres + Redis, on http://localhost:8080
+```
+
+Swagger UI at `/swagger-ui.html`, health at `/actuator/health`.
+
+### Or run the pieces yourself
+
 You'll need Docker (or Postgres running some other way), a JDK, and Node.
 
 ```bash
