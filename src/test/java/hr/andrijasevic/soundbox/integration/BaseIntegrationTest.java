@@ -2,6 +2,7 @@ package hr.andrijasevic.soundbox.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hr.andrijasevic.soundbox.TestcontainersConfiguration;
 import hr.andrijasevic.soundbox.external.itunes.ITunesClient;
 import hr.andrijasevic.soundbox.external.musicbrainz.MusicBrainzClient;
 import hr.andrijasevic.soundbox.external.musicbrainz.dto.ArtistCreditDto;
@@ -10,6 +11,7 @@ import hr.andrijasevic.soundbox.external.musicbrainz.dto.MusicBrainzAlbumRespons
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,13 +25,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 /**
- * Shared setup for full-stack tests: real MVC + security + JPA on H2
- * (application-test.yml), with the external HTTP clients mocked out.
+ * Shared setup for full-stack tests: real MVC + security + JPA against a real
+ * PostgreSQL (Testcontainers, see {@link TestcontainersConfiguration}) with the real
+ * Flyway migrations applied. External HTTP clients are mocked out.
  * {@code @Transactional} rolls each test back so tests stay independent.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
 @Transactional
 public abstract class BaseIntegrationTest {
 
