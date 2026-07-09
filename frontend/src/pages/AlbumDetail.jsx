@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getAlbum, getAlbumReviews } from '../api';
+import { getAlbum, getAlbumReviews, getMyRelistenHistory } from '../api';
 import AlbumCover from '../components/AlbumCover';
 import ReviewCard from '../components/ReviewCard';
+import RelistenHistory from '../components/RelistenHistory';
 import Pagination from '../components/Pagination';
 import LogListenModal from '../components/LogListenModal';
 import ReviewModal from '../components/ReviewModal';
@@ -15,6 +16,7 @@ export default function AlbumDetail() {
   const [error, setError] = useState(null);
   const [reviews, setReviews] = useState(null);
   const [reviewPage, setReviewPage] = useState(0);
+  const [history, setHistory] = useState([]);
   const [modal, setModal] = useState(null); // 'log' | 'review' | 'list'
   const [toast, setToast] = useState(null);
 
@@ -33,6 +35,14 @@ export default function AlbumDetail() {
   }, [mbid, reviewPage]);
 
   useEffect(loadReviews, [loadReviews]);
+
+  const loadHistory = useCallback(() => {
+    getMyRelistenHistory(mbid)
+      .then(({ data }) => setHistory(data))
+      .catch(() => setHistory([]));
+  }, [mbid]);
+
+  useEffect(loadHistory, [loadHistory]);
 
   const flash = (msg) => {
     setToast(msg);
@@ -106,6 +116,8 @@ export default function AlbumDetail() {
         </div>
       </div>
 
+      <RelistenHistory logs={history} />
+
       <div className="divider-label" style={{ marginTop: 40 }}>
         Reviews
       </div>
@@ -125,7 +137,14 @@ export default function AlbumDetail() {
       )}
 
       {modal === 'log' && (
-        <LogListenModal album={album} onClose={() => setModal(null)} onLogged={() => flash('Listen logged ✓')} />
+        <LogListenModal
+          album={album}
+          onClose={() => setModal(null)}
+          onLogged={() => {
+            flash('Listen logged ✓');
+            loadHistory();
+          }}
+        />
       )}
       {modal === 'review' && (
         <ReviewModal

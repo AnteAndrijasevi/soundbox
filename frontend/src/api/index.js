@@ -30,6 +30,10 @@ export const getMyLog = (page = 0, size = 12) =>
   client.get('/users/me/log', { params: { page, size } });
 export const getUserLog = (userId, page = 0, size = 12) =>
   client.get(`/users/${userId}/log`, { params: { page, size } });
+export const getMyRelistenHistory = (mbid) =>
+  client.get(`/users/me/albums/${mbid}/history`);
+export const getUserRelistenHistory = (userId, mbid) =>
+  client.get(`/users/${userId}/albums/${mbid}/history`);
 
 // Feed
 export const getFeed = (page = 0, size = 10) =>
