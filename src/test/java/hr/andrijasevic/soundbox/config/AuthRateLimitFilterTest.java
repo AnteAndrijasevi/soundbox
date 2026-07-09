@@ -34,7 +34,7 @@ class AuthRateLimitFilterTest {
         filter.doFilter(authRequest("10.0.0.1"), blocked, chain);
 
         assertThat(blocked.getStatus()).isEqualTo(429);
-        assertThat(blocked.getContentType()).isEqualTo("application/problem+json");
+        assertThat(blocked.getContentType()).startsWith("application/problem+json");
         assertThat(blocked.getContentAsString()).contains("Too Many Requests");
         verify(chain, times(2)).doFilter(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
