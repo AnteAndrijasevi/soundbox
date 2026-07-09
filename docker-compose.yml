@@ -1,0 +1,56 @@
+# Local full-stack run: the app plus its Postgres and Redis.
+# (Kafka is added alongside the event-driven feature.)
+#   docker compose up --build
+# App on http://localhost:8080, Swagger at /swagger-ui.html.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: soundbox
+      POSTGRES_PASSWORD: soundbox
+      POSTGRES_DB: soundbox
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soundbox"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: json
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/soundbox
+      SPRING_DATASOURCE_USERNAME: soundbox
+      SPRING_DATASOURCE_PASSWORD: soundbox
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+volumes:
+  pgdata:
