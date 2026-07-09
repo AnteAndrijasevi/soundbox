@@ -76,7 +76,8 @@ tests covering auth, review upsert/validation, listen log, and follow/feed/like 
 ## Backend-maturity wave (in progress)
 
 1. ~~RFC 7807 ProblemDetail + typed exceptions + DTO validation~~ (done: `feat/problem-details`)
-2. springdoc-openapi / Swagger UI
+2. ~~springdoc-openapi / Swagger UI~~ (done: `feat/swagger` — UI at `/swagger-ui.html`,
+   spec at `/api-docs`, JWT Authorize button, `@Tag`-grouped controllers)
 3. Actuator + structured JSON logs + correlation/trace ID
 4. Testcontainers (real Postgres) for integration tests
 5. Resilience4j (circuit breaker + retry) around MusicBrainz/iTunes (+ cherry-pick CAA redirect fix)

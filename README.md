@@ -19,7 +19,7 @@ _Coming soon — the app is fully functional and manually verified end-to-end (s
 
 ## Stack
 
-**Backend** — Spring Boot 3.4.3 (Java 17), PostgreSQL with Flyway migrations, Spring Security with stateless JWT auth, Spring Data JPA, WebClient for external HTTP, Lombok. 23 REST endpoints across 8 controllers.
+**Backend** — Spring Boot 3.4.3 (Java 17), PostgreSQL with Flyway migrations, Spring Security with stateless JWT auth, Spring Data JPA, WebClient for external HTTP, Lombok. 23 REST endpoints across 8 controllers, documented with an interactive Swagger UI (`/swagger-ui.html`) and RFC 7807 ProblemDetail error responses.
 
 **Frontend** — Vite + React 18 + React Router 6 + Axios, hand-rolled CSS design system (no UI framework) — warm, diaristic, paper-and-ink.
 
