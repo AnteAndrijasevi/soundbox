@@ -58,3 +58,34 @@ info:
   app:
     name: soundbox
     description: A sonic memory log — every listener is a curator
+
+resilience4j:
+  circuitbreaker:
+    # health indicator off so an external-API outage doesn't fail the app's own healthcheck;
+    # circuit state is still exported to metrics/prometheus
+    configs:
+      default:
+        register-health-indicator: false
+        sliding-window-size: 10
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      musicbrainz:
+        base-config: default
+      itunes:
+        base-config: default
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        ignore-exceptions:
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+    instances:
+      musicbrainz:
+        base-config: default
+      itunes:
+        base-config: default
