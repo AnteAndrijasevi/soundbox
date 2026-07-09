@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Modal from './Modal';
 import { StarInput } from './StarRating';
-import { submitReview } from '../api';
+import { apiError, submitReview } from '../api';
 
 export default function ReviewModal({ album, onClose, onSaved }) {
   const [rating, setRating] = useState(null);
@@ -21,7 +21,7 @@ export default function ReviewModal({ album, onClose, onSaved }) {
       onSaved?.(data);
       onClose();
     } catch (e) {
-      setError(e.response?.data?.message ?? 'Could not save your review. Try again.');
+      setError(apiError(e, 'Could not save your review. Try again.'));
       setSaving(false);
     }
   };

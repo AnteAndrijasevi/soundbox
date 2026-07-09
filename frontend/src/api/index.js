@@ -1,5 +1,11 @@
 import client from './client';
 
+/** Pull a human message out of a ProblemDetail (RFC 7807) response, else fall back. */
+export function apiError(err, fallback) {
+  const data = err?.response?.data;
+  return data?.detail ?? data?.message ?? data?.error ?? fallback;
+}
+
 // Auth
 export const register = (data) => client.post('/auth/register', data);
 export const login = (data) => client.post('/auth/login', data);

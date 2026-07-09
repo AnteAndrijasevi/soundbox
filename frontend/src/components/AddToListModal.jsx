@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Modal from './Modal';
-import { getUserLists, addAlbumToList, createList } from '../api';
+import { apiError, getUserLists, addAlbumToList, createList } from '../api';
 import { useAuth } from '../auth/AuthContext';
 
 export default function AddToListModal({ album, onClose, onAdded }) {
@@ -35,7 +35,7 @@ export default function AddToListModal({ album, onClose, onAdded }) {
       onAdded?.(listId);
       onClose();
     } catch (e) {
-      setError(e.response?.data?.message ?? 'Could not add the album to the list.');
+      setError(apiError(e, 'Could not add the album to the list.'));
       setSaving(false);
     }
   };

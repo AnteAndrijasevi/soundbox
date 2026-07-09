@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createList, getUserLists } from '../api';
+import { apiError, createList, getUserLists } from '../api';
 import { useAuth } from '../auth/AuthContext';
 import Modal from '../components/Modal';
 
@@ -33,7 +33,7 @@ export default function Lists() {
       setIsPublic(true);
       load();
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Could not create the list.');
+      setError(apiError(err, 'Could not create the list.'));
     } finally {
       setBusy(false);
     }
