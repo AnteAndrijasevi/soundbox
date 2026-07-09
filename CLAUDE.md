@@ -47,9 +47,11 @@ the real Flyway migrations run and Hibernate validates the schema — production
   frontend parses it in `src/constants.js`.
 - iTunes responds with `Content-Type: text/javascript` — `ITunesClient` fetches the body
   as String and parses with Jackson; don't switch back to `bodyToMono(dto)`.
-- Cover Art Archive answers with 307 redirects that the current `MusicBrainzClient` does
-  **not** follow, so `coverArtUrl` is usually null on main. The unmerged remote branch
-  `feat/backend-polish` fixes this (plus adds Swagger) — coordinate before touching that code.
+- The cover-art WebClient follows Cover Art Archive's 307 redirects (`followRedirect(true)`),
+  so `coverArtUrl` resolves. External calls (MusicBrainz search/getAlbum, iTunes artwork) are
+  wrapped with Resilience4j `@CircuitBreaker` + `@Retry` and degrade to empty/null on outage.
+  (This work supersedes the old `feat/backend-polish` branch entirely — Swagger, error
+  handling, and the CAA fix are all now on the maturity-wave branches.)
 - Frontend `AlbumCover` component falls back: `artworkUrl` → `coverArtUrl` → CAA by-mbid URL
   → placeholder. Review/log/list DTO mappers coalesce artwork (iTunes preferred).
 - Ratings are 0.5–5.0 (DB CHECK + bean validation). Reviews upsert per (user, album).
@@ -90,7 +92,7 @@ the real Flyway migrations run and Hibernate validates the schema — production
    `/actuator/health`+`/info` public, metrics/prometheus authed; `logback-spring.xml` JSON
    under the `json` profile; `CorrelationIdFilter` → `X-Correlation-Id` in MDC + response)
 4. ~~Testcontainers (real Postgres) for integration tests~~ (done: `feat/testcontainers`)
-5. Resilience4j (circuit breaker + retry) around MusicBrainz/iTunes (+ cherry-pick CAA redirect fix)
+5. ~~Resilience4j (circuit breaker + retry) around MusicBrainz/iTunes + CAA redirect fix~~ (done: `feat/resilience`)
 6. Redis cache (Spring Cache) for external lookups + Bucket4j rate limiting on auth
 7. Multi-stage Dockerfile + docker-compose (app + Postgres + Redis + Kafka)
 8. GitHub Actions CI (build + test)
