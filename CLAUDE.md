@@ -25,10 +25,18 @@ JAVA_HOME=$(/usr/libexec/java_home -v 23) ./mvnw spring-boot:run   # :8080
 npm run dev --prefix frontend   # :5173, /api proxied to :8080
 ```
 
-Tests: `JAVA_HOME=$(/usr/libexec/java_home -v 23) ./mvnw test` (H2 via `application-test.yml`).
-59 tests: service-layer unit tests (Mockito) per service, plus `integration/` MockMvc
-tests covering auth, review upsert/validation, listen log, and follow/feed/like flows
-(external HTTP clients mocked via `@MockitoBean` in `BaseIntegrationTest`).
+Tests: `JAVA_HOME=$(/usr/libexec/java_home -v 23) ./mvnw test`. Service-layer unit tests
+(Mockito) per service, plus `integration/` MockMvc tests covering auth, review
+upsert/validation, listen log, follow/feed/like, and correlation-id flows (external HTTP
+clients mocked via `@MockitoBean` in `BaseIntegrationTest`). Integration tests run against a
+**real PostgreSQL via Testcontainers** (`TestcontainersConfiguration`, `@ServiceConnection`):
+the real Flyway migrations run and Hibernate validates the schema — production parity, no H2.
+
+- **CI / Docker Desktop**: `./mvnw test` works with no extra config.
+- **Local colima**: put `docker.host=unix:///Users/<you>/.colima/default/docker.sock` in
+  `~/.testcontainers.properties`, then run
+  `DOCKER_API_VERSION=1.43 TESTCONTAINERS_RYUK_DISABLED=true ./mvnw test`
+  (colima's Docker requires API ≥ 1.40, and Ryuk can't bind-mount the colima socket).
 
 ## Architecture notes
 
@@ -81,7 +89,7 @@ tests covering auth, review upsert/validation, listen log, and follow/feed/like 
 3. ~~Actuator + structured JSON logs + correlation/trace ID~~ (done: `feat/observability` —
    `/actuator/health`+`/info` public, metrics/prometheus authed; `logback-spring.xml` JSON
    under the `json` profile; `CorrelationIdFilter` → `X-Correlation-Id` in MDC + response)
-4. Testcontainers (real Postgres) for integration tests
+4. ~~Testcontainers (real Postgres) for integration tests~~ (done: `feat/testcontainers`)
 5. Resilience4j (circuit breaker + retry) around MusicBrainz/iTunes (+ cherry-pick CAA redirect fix)
 6. Redis cache (Spring Cache) for external lookups + Bucket4j rate limiting on auth
 7. Multi-stage Dockerfile + docker-compose (app + Postgres + Redis + Kafka)
