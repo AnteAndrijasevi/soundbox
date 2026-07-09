@@ -31,3 +31,11 @@ musicbrainz:
 
 itunes:
   base-url: https://itunes.apple.com
+
+springdoc:
+  api-docs:
+    path: /api-docs          # matches the permitAll rule in SecurityConfig
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
