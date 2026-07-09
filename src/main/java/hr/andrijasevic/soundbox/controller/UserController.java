@@ -5,9 +5,11 @@ import hr.andrijasevic.soundbox.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.Map;
 
+@Tag(name = "Users", description = "Profiles and bio")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {

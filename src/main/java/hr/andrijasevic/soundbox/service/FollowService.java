@@ -5,6 +5,8 @@ import hr.andrijasevic.soundbox.domain.FollowId;
 import hr.andrijasevic.soundbox.domain.Review;
 import hr.andrijasevic.soundbox.domain.User;
 import hr.andrijasevic.soundbox.dto.ReviewDto;
+import hr.andrijasevic.soundbox.exception.BadRequestException;
+import hr.andrijasevic.soundbox.exception.ResourceNotFoundException;
 import hr.andrijasevic.soundbox.repository.FollowRepository;
 import hr.andrijasevic.soundbox.repository.LikeRepository;
 import hr.andrijasevic.soundbox.repository.ReviewRepository;
@@ -38,14 +40,14 @@ public class FollowService {
 
     public void toggleFollow(Long targetUserId, String email) {
         User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (currentUser.getId().equals(targetUserId)) {
-            throw new RuntimeException("Cannot follow yourself");
+            throw new BadRequestException("Cannot follow yourself");
         }
 
         User targetUser = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (followRepository.existsByIdFollowerIdAndIdFollowingId(currentUser.getId(), targetUserId)) {
             followRepository.deleteByIdFollowerIdAndIdFollowingId(currentUser.getId(), targetUserId);
@@ -66,7 +68,7 @@ public class FollowService {
 
     public Page<ReviewDto> getFeed(String email, Pageable pageable) {
         User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         List<Follow> following = followRepository.findByIdFollowerId(currentUser.getId());
         List<Long> followingIds = following.stream()
@@ -90,6 +92,7 @@ public class FollowService {
                 review.getId(),
                 albumMbid,
                 albumTitle,
+                review.getUser() != null ? review.getUser().getId() : null,
                 username,
                 review.getRating(),
                 review.getText(),

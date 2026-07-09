@@ -2,6 +2,7 @@ package hr.andrijasevic.soundbox.service;
 
 import hr.andrijasevic.soundbox.domain.User;
 import hr.andrijasevic.soundbox.dto.UserDto;
+import hr.andrijasevic.soundbox.exception.ResourceNotFoundException;
 import hr.andrijasevic.soundbox.repository.FollowRepository;
 import hr.andrijasevic.soundbox.repository.ReviewRepository;
 import hr.andrijasevic.soundbox.repository.UserRepository;
@@ -26,7 +27,7 @@ public class UserService {
 
     public UserDto getProfile(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         int followerCount = followRepository.countByIdFollowingId(userId);
         int followingCount = followRepository.countByIdFollowerId(userId);
         int reviewCount = reviewRepository.countByUserId(userId);
@@ -42,12 +43,14 @@ public class UserService {
     }
 
     public UserDto getCurrentUser(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return getProfile(user.getId());
     }
 
     public UserDto updateBio(String bio, String email) {
-        User user = userRepository.findByEmail(email).orElseThrow();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setBio(bio);
         userRepository.save(user);
         return getProfile(user.getId());

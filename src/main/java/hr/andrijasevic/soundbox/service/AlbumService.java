@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hr.andrijasevic.soundbox.domain.Album;
 import hr.andrijasevic.soundbox.domain.Artist;
 import hr.andrijasevic.soundbox.dto.AlbumDto;
+import hr.andrijasevic.soundbox.external.itunes.ITunesClient;
 import hr.andrijasevic.soundbox.external.musicbrainz.MusicBrainzClient;
 import hr.andrijasevic.soundbox.external.musicbrainz.dto.ArtistCreditDto;
 import hr.andrijasevic.soundbox.external.musicbrainz.dto.GenreDto;
@@ -24,17 +25,20 @@ import java.util.Optional;
 public class AlbumService {
 
     private final MusicBrainzClient musicBrainzClient;
+    private final ITunesClient iTunesClient;
     private final AlbumRepository albumRepository;
     private final ArtistRepository artistRepository;
     private final ObjectMapper objectMapper;
 
     public AlbumService(
             MusicBrainzClient musicBrainzClient,
+            ITunesClient iTunesClient,
             AlbumRepository albumRepository,
             ArtistRepository artistRepository,
             ObjectMapper objectMapper
     ) {
         this.musicBrainzClient = musicBrainzClient;
+        this.iTunesClient = iTunesClient;
         this.albumRepository = albumRepository;
         this.artistRepository = artistRepository;
         this.objectMapper = objectMapper;
@@ -75,7 +79,7 @@ public class AlbumService {
             // leave null on error
         }
 
-        return new AlbumDto(null, release.getId(), release.getTitle(), artistName, release.getDate(), null, genres, tracklist);
+        return new AlbumDto(null, release.getId(), release.getTitle(), artistName, release.getDate(), null, null, genres, tracklist);
     }
 
     public AlbumDto getAlbum(String mbid) {
@@ -147,6 +151,16 @@ public class AlbumService {
         } else {
             album.setMbid(mbid);
         }
+        // iTunes artwork (MusicBrainz stays the metadata source of truth); keep the
+        // previous artwork if the lookup comes back empty
+        String artworkUrl = iTunesClient.findArtworkUrl(
+                artist != null ? artist.getName() : null,
+                album.getTitle()
+        );
+        if (artworkUrl != null) {
+            album.setArtworkUrl(artworkUrl);
+        }
+
         album.setReleaseDate(releaseDate);
         album.setCoverArtUrl(coverArtUrl);
         album.setGenres(genres);
@@ -167,6 +181,7 @@ public class AlbumService {
                 artistName,
                 album.getReleaseDate() != null ? album.getReleaseDate().toString() : null,
                 album.getCoverArtUrl(),
+                album.getArtworkUrl(),
                 album.getGenres() != null ? album.getGenres() : List.of(),
                 album.getTracklist()
         );

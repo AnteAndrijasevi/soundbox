@@ -4,7 +4,9 @@ import hr.andrijasevic.soundbox.service.LikeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Likes", description = "Like and unlike reviews")
 @RestController
 @RequestMapping("/api/reviews")
 public class LikeController {

@@ -5,6 +5,8 @@ import hr.andrijasevic.soundbox.domain.Review;
 import hr.andrijasevic.soundbox.domain.User;
 import hr.andrijasevic.soundbox.dto.ReviewDto;
 import hr.andrijasevic.soundbox.dto.ReviewRequest;
+import hr.andrijasevic.soundbox.exception.ForbiddenException;
+import hr.andrijasevic.soundbox.exception.ResourceNotFoundException;
 import hr.andrijasevic.soundbox.repository.AlbumRepository;
 import hr.andrijasevic.soundbox.repository.LikeRepository;
 import hr.andrijasevic.soundbox.repository.ReviewRepository;
@@ -41,14 +43,14 @@ public class ReviewService {
 
     public ReviewDto createOrUpdateReview(String mbid, ReviewRequest request, String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Optional<Album> albumOpt = albumRepository.findByMbid(mbid);
         if (albumOpt.isEmpty()) {
             albumService.getAlbum(mbid);
         }
         Album album = albumRepository.findByMbid(mbid)
-                .orElseThrow(() -> new RuntimeException("Album not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Album not found"));
 
         Optional<Review> existingReview = reviewRepository.findByUserIdAndAlbumId(user.getId(), album.getId());
 
@@ -85,11 +87,11 @@ public class ReviewService {
 
     public void deleteReview(Long reviewId, String email) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (!review.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Not authorized");
+            throw new ForbiddenException("Not authorized");
         }
         reviewRepository.delete(review);
     }
@@ -103,6 +105,7 @@ public class ReviewService {
                 review.getId(),
                 albumMbid,
                 albumTitle,
+                review.getUser() != null ? review.getUser().getId() : null,
                 username,
                 review.getRating(),
                 review.getText(),

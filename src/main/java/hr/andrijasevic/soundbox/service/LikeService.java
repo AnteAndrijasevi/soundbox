@@ -4,6 +4,7 @@ import hr.andrijasevic.soundbox.domain.Like;
 import hr.andrijasevic.soundbox.domain.LikeId;
 import hr.andrijasevic.soundbox.domain.Review;
 import hr.andrijasevic.soundbox.domain.User;
+import hr.andrijasevic.soundbox.exception.ResourceNotFoundException;
 import hr.andrijasevic.soundbox.repository.LikeRepository;
 import hr.andrijasevic.soundbox.repository.ReviewRepository;
 import hr.andrijasevic.soundbox.repository.UserRepository;
@@ -30,9 +31,9 @@ public class LikeService {
 
     public void toggleLike(Long reviewId, String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
         if (likeRepository.existsByIdUserIdAndIdReviewId(user.getId(), reviewId)) {
             likeRepository.deleteByIdUserIdAndIdReviewId(user.getId(), reviewId);
