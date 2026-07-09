@@ -1,5 +1,7 @@
 # soundbox
 
+[![CI](https://github.com/AnteAndrijasevi/soundbox/actions/workflows/ci.yml/badge.svg)](https://github.com/AnteAndrijasevi/soundbox/actions/workflows/ci.yml)
+
 **your sonic memory log.** Every user is a curator.
 
 Soundbox is a Letterboxd-style app for music albums — but instead of just rating things, it's built around *logging a listen*: the mood you were in, where you were, whether it was your first time hearing it, the track that got you. Reviews and star ratings exist too, but the diary is the point. Over time your listen log becomes a record of how an album moved through your life, not just a score you gave it once.
