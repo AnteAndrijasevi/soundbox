@@ -19,12 +19,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -135,5 +138,35 @@ class ListenLogServiceTest {
                 MBID, new ListenLogRequest(null, null, null, null, null, null), "ante@example.com");
 
         assertThat(dto.albumCoverArtUrl()).isEqualTo("https://caa.example/front.jpg");
+    }
+
+    @Test
+    void relistenHistory_returnsUsersLogsForAlbumOldestFirst() {
+        ListenLog then = new ListenLog();
+        then.setAlbum(album);
+        then.setListenedAt(LocalDateTime.now().minusYears(1));
+        then.setMood(Mood.MELANCHOLIC);
+        ListenLog now = new ListenLog();
+        now.setAlbum(album);
+        now.setListenedAt(LocalDateTime.now());
+        now.setMood(Mood.NOSTALGIC);
+
+        when(albumRepository.findByMbid(MBID)).thenReturn(Optional.of(album));
+        when(listenLogRepository.findByUserIdAndAlbumIdOrderByListenedAtAsc(1L, 10L))
+                .thenReturn(List.of(then, now));
+
+        List<ListenLogDto> history = listenLogService.getRelistenHistory(1L, MBID);
+
+        assertThat(history).hasSize(2);
+        assertThat(history.get(0).mood()).isEqualTo(Mood.MELANCHOLIC); // "then"
+        assertThat(history.get(1).mood()).isEqualTo(Mood.NOSTALGIC);   // "now"
+    }
+
+    @Test
+    void relistenHistory_returnsEmptyWhenAlbumNeverCached() {
+        when(albumRepository.findByMbid(MBID)).thenReturn(Optional.empty());
+
+        assertThat(listenLogService.getRelistenHistory(1L, MBID)).isEmpty();
+        verifyNoInteractions(listenLogRepository);
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 public class ListenLogController {
 
@@ -40,5 +42,21 @@ public class ListenLogController {
             Pageable pageable
     ) {
         return ResponseEntity.ok(listenLogService.getListenLog(userId, pageable));
+    }
+
+    // "Then vs Now" — a user's listens of one album over time, oldest first.
+
+    @GetMapping("/api/users/me/albums/{mbid}/history")
+    public ResponseEntity<List<ListenLogDto>> getMyRelistenHistory(@PathVariable String mbid) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(listenLogService.getMyRelistenHistory(mbid, email));
+    }
+
+    @GetMapping("/api/users/{userId}/albums/{mbid}/history")
+    public ResponseEntity<List<ListenLogDto>> getRelistenHistory(
+            @PathVariable Long userId,
+            @PathVariable String mbid
+    ) {
+        return ResponseEntity.ok(listenLogService.getRelistenHistory(userId, mbid));
     }
 }

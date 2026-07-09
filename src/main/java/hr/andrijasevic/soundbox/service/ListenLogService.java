@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class ListenLogService {
@@ -44,6 +45,27 @@ public class ListenLogService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return getListenLog(user.getId(), pageable);
+    }
+
+    /**
+     * A user's full listen history for one album, oldest first — the data behind
+     * "Then vs Now". Returns an empty list when the album was never cached (and so
+     * could never have been logged), rather than treating that as an error.
+     */
+    public List<ListenLogDto> getRelistenHistory(Long userId, String mbid) {
+        return albumRepository.findByMbid(mbid)
+                .map(album -> listenLogRepository
+                        .findByUserIdAndAlbumIdOrderByListenedAtAsc(userId, album.getId())
+                        .stream()
+                        .map(this::mapToDto)
+                        .toList())
+                .orElseGet(List::of);
+    }
+
+    public List<ListenLogDto> getMyRelistenHistory(String mbid, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return getRelistenHistory(user.getId(), mbid);
     }
 
     public ListenLogDto logListen(String mbid, ListenLogRequest request, String email) {

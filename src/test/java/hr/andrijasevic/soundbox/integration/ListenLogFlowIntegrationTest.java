@@ -88,4 +88,38 @@ class ListenLogFlowIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("OK Computer"));
     }
+
+    @Test
+    void relistenHistory_returnsAllListensOfAlbumOldestFirst() throws Exception {
+        mockMvc.perform(post("/api/albums/" + MBID + "/log")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"mood":"MELANCHOLIC","isFirstListen":true}
+                                """))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/albums/" + MBID + "/log")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"mood":"NOSTALGIC"}
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/users/me/albums/" + MBID + "/history")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].mood").value("MELANCHOLIC")) // then
+                .andExpect(jsonPath("$[0].isFirstListen").value(true))
+                .andExpect(jsonPath("$[1].mood").value("NOSTALGIC"));  // now
+    }
+
+    @Test
+    void relistenHistory_isEmptyForNeverLoggedAlbum() throws Exception {
+        mockMvc.perform(get("/api/users/me/albums/" + MBID + "/history")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
 }
