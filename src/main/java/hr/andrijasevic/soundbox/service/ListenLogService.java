@@ -18,10 +18,16 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ListenLogService {
+
+    // "one year ago" nudge: logs within ±7 days of exactly a year back, capped
+    private static final int NUDGE_WINDOW_DAYS = 7;
+    private static final int NUDGE_LIMIT = 12;
 
     private final UserRepository userRepository;
     private final AlbumRepository albumRepository;
@@ -73,6 +79,29 @@ public class ListenLogService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return getRelistenHistory(user.getId(), mbid);
+    }
+
+    /**
+     * "One year ago" nudges: the albums this user logged around a year ago (±{@value
+     * #NUDGE_WINDOW_DAYS} days), deduped to the most recent listen per album, newest first.
+     * A gentle retention hook — "revisit what you were playing this time last year".
+     */
+    public List<ListenLogDto> getRelistenNudges(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        LocalDateTime aYearAgo = LocalDateTime.now().minusDays(365);
+        LocalDateTime start = aYearAgo.minusDays(NUDGE_WINDOW_DAYS);
+        LocalDateTime end = aYearAgo.plusDays(NUDGE_WINDOW_DAYS);
+
+        Map<Long, ListenLogDto> byAlbum = new LinkedHashMap<>();
+        for (ListenLog log : listenLogRepository
+                .findByUserIdAndListenedAtBetweenOrderByListenedAtDesc(user.getId(), start, end)) {
+            if (log.getAlbum() != null) {
+                byAlbum.putIfAbsent(log.getAlbum().getId(), mapToDto(log)); // desc order → keeps newest per album
+            }
+        }
+        return byAlbum.values().stream().limit(NUDGE_LIMIT).toList();
     }
 
     public ListenLogDto logListen(String mbid, ListenLogRequest request, String email) {

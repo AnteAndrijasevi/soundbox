@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -172,5 +173,42 @@ class ListenLogServiceTest {
 
         assertThat(listenLogService.getRelistenHistory(1L, MBID)).isEmpty();
         verifyNoInteractions(listenLogRepository);
+    }
+
+    @Test
+    void relistenNudges_dedupesByAlbumKeepingMostRecent() {
+        Album other = Album.builder().id(20L).mbid("22222222-2222-2222-2222-222222222222").title("In Rainbows").build();
+        ListenLog aNewer = new ListenLog();
+        aNewer.setAlbum(album);
+        aNewer.setListenedAt(LocalDateTime.now().minusDays(363));
+        aNewer.setMood(Mood.NOSTALGIC);
+        ListenLog aOlder = new ListenLog();
+        aOlder.setAlbum(album);
+        aOlder.setListenedAt(LocalDateTime.now().minusDays(367));
+        aOlder.setMood(Mood.MELANCHOLIC);
+        ListenLog b = new ListenLog();
+        b.setAlbum(other);
+        b.setListenedAt(LocalDateTime.now().minusDays(365));
+
+        when(userRepository.findByEmail("ante@example.com")).thenReturn(Optional.of(user));
+        // repository returns newest-first
+        when(listenLogRepository.findByUserIdAndListenedAtBetweenOrderByListenedAtDesc(anyLong(), any(), any()))
+                .thenReturn(List.of(aNewer, aOlder, b));
+
+        List<ListenLogDto> nudges = listenLogService.getRelistenNudges("ante@example.com");
+
+        assertThat(nudges).hasSize(2); // one entry per album
+        assertThat(nudges.get(0).albumMbid()).isEqualTo(MBID);
+        assertThat(nudges.get(0).mood()).isEqualTo(Mood.NOSTALGIC); // kept the most recent listen of that album
+        assertThat(nudges.get(1).albumTitle()).isEqualTo("In Rainbows");
+    }
+
+    @Test
+    void relistenNudges_emptyWhenNothingLoggedAYearAgo() {
+        when(userRepository.findByEmail("ante@example.com")).thenReturn(Optional.of(user));
+        when(listenLogRepository.findByUserIdAndListenedAtBetweenOrderByListenedAtDesc(anyLong(), any(), any()))
+                .thenReturn(List.of());
+
+        assertThat(listenLogService.getRelistenNudges("ante@example.com")).isEmpty();
     }
 }
