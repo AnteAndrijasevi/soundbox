@@ -42,8 +42,8 @@ spring:
     locations: classpath:db/migration
 
 jwt:
-  secret: moj-super-tajni-kljuc-koji-mora-biti-dovoljno-dugacak-za-hs256
-  expiration: 86400000
+  secret: ${JWT_SECRET:moj-super-tajni-kljuc-koji-mora-biti-dovoljno-dugacak-za-hs256}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 musicbrainz:
   base-url: https://musicbrainz.org/ws/2
@@ -81,6 +81,8 @@ info:
     description: A sonic memory log — every listener is a curator
 
 app:
+  cors:
+    allowed-origins: http://localhost:5173  # comma-separated; override in prod (APP_CORS_ALLOWED_ORIGINS)
   rate-limit:
     enabled: true
     auth-capacity: 10          # burst of 10 auth requests per IP
