@@ -45,6 +45,12 @@ export const getUserRelistenHistory = (userId, mbid) =>
 export const getFeed = (page = 0, size = 10) =>
   client.get('/feed', { params: { page, size } });
 
+// Notifications
+export const getNotifications = (page = 0, size = 20) =>
+  client.get('/users/me/notifications', { params: { page, size } });
+export const getUnreadCount = () => client.get('/users/me/notifications/unread-count');
+export const markNotificationsRead = () => client.post('/users/me/notifications/read');
+
 // Lists
 export const createList = (data) => client.post('/lists', data);
 export const getUserLists = (userId) => client.get(`/users/${userId}/lists`);
