@@ -63,6 +63,11 @@ the real Flyway migrations run and Hibernate validates the schema — production
   `GET /api/users/{id|me}/albums/{mbid}/history` (oldest-first); the frontend
   `RelistenHistory` component compares the earliest and latest and hides itself below 2 logs.
 - Follow/like endpoints are blind toggles; DTOs don't report isFollowing/likedByMe yet.
+- Logging a listen publishes a `ListenLoggedEvent` to Kafka (`event/` package, topic
+  `soundbox.listen-logged`). A `@KafkaListener` consumer fans it out to the actor's
+  followers as `notifications` rows (V4). Publishing is fire-and-forget and disabled via
+  `app.events.enabled=false` (tests); the consumer/publisher are unit-tested, and the flow
+  is exercised end-to-end through `docker compose` (which includes a KRaft Kafka).
 - Errors are RFC 7807 `ProblemDetail` (`application/problem+json`). Services throw a typed
   `ApiException` subclass (`exception/` package) — `ResourceNotFoundException` (404),
   `ForbiddenException` (403), `ConflictException` (409), `UnauthorizedException` (401),
@@ -102,5 +107,5 @@ the real Flyway migrations run and Hibernate validates the schema — production
    `docker compose up --build`. Kafka added with the event feature.)
 8. ~~GitHub Actions CI (build + test)~~ (done: `feat/ci` — `.github/workflows/ci.yml`,
    `mvnw verify` on JDK 21 + Docker image build; Testcontainers runs in CI with no extra config)
-9. Kafka event-driven: listen logged → event → consumer builds feed/notifications
+9. ~~Kafka event-driven: listen logged → event → consumer builds notifications~~ (done: `feat/kafka`)
 10. Fly.io deploy config + instructions (final authenticated deploy is the user's)

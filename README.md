@@ -18,16 +18,21 @@ _Coming soon — the app is fully functional and manually verified end-to-end (s
 - **Follow people** and see their reviews in a paginated feed; like the ones that land
 - **Build lists** — curate albums into named, ordered, public-or-private shelves
 - **Browse profiles** — your own or anyone else's: listen-log diary, reviews, and lists, all tabbed together with follower/following counts
+- **Get notified** — when someone you follow logs a listen, an event flows through Kafka to a consumer that drops a notification in your feed
 
 ## Stack
 
-**Backend** — Spring Boot 3.4.3 (Java 17), PostgreSQL with Flyway migrations, Spring Security with stateless JWT auth, Spring Data JPA, WebClient for external HTTP, Lombok. 23 REST endpoints across 8 controllers, documented with an interactive Swagger UI (`/swagger-ui.html`) and RFC 7807 ProblemDetail error responses.
+**Backend** — Spring Boot 3.4.3 (Java 17), PostgreSQL with Flyway migrations, Spring Security with stateless JWT auth, Spring Data JPA, WebClient for external HTTP, Lombok. REST API documented with an interactive Swagger UI (`/swagger-ui.html`) and RFC 7807 ProblemDetail error responses.
+
+**Reliability & ops** — Resilience4j circuit breakers + retries around the external APIs, Redis caching (Spring Cache) of searches, Bucket4j rate limiting on auth, Spring Boot Actuator (health/metrics/Prometheus), structured JSON logging with a per-request correlation id.
+
+**Events** — logging a listen publishes a **Kafka** event; a consumer fans it out into follower notifications.
 
 **Frontend** — Vite + React 18 + React Router 6 + Axios, hand-rolled CSS design system (no UI framework) — warm, diaristic, paper-and-ink.
 
 **External data** — [MusicBrainz](https://musicbrainz.org/) is the metadata source of truth (search, tracklist, genres, release dates); the [iTunes Search API](https://performance-partners.apple.com/search-api) supplies album artwork, with [Cover Art Archive](https://coverartarchive.org/) as a fallback.
 
-**Tests** — 59 tests: JUnit 5 + Mockito service-layer unit tests, plus Spring MockMvc integration tests against H2 covering the auth, review, listen-log, and follow/feed flows end-to-end (external HTTP mocked).
+**Tests & CI** — JUnit 5 + Mockito service-layer unit tests, plus Spring MockMvc integration tests that run against a **real PostgreSQL via Testcontainers** (the real Flyway migrations execute). GitHub Actions builds and tests every push and validates the Docker image.
 
 ## Running it locally
 
