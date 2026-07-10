@@ -90,7 +90,8 @@ the real Flyway migrations run and Hibernate validates the schema — production
    tooling here has no way to save a rendered screenshot to disk, so real screenshots need
    to be captured from a real browser and dropped into a `docs/screenshots/` the user creates)
 4. ~~"Then vs Now" — relisten history endpoint + album-page UI diff~~ (done: `feat/relisten-history`)
-5. Relisten nudge (logs ~365 days old) + profile surface
+5. ~~Relisten nudge (logs ~365 days old) + profile surface~~ (done: `feat/relisten-nudge` —
+   `GET /api/users/me/relisten-nudges`, deduped by album; "One year ago" card on own profile)
 
 ## Backend-maturity wave (in progress)
 
