@@ -40,6 +40,7 @@ export const getMyRelistenHistory = (mbid) =>
   client.get(`/users/me/albums/${mbid}/history`);
 export const getUserRelistenHistory = (userId, mbid) =>
   client.get(`/users/${userId}/albums/${mbid}/history`);
+export const getRelistenNudges = () => client.get('/users/me/relisten-nudges');
 
 // Feed
 export const getFeed = (page = 0, size = 10) =>
