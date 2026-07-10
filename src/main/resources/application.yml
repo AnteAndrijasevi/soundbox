@@ -7,6 +7,27 @@ spring:
     username: soundbox
     password: soundbox
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        max.block.ms: 3000   # fail fast instead of blocking the request if the broker is down
+    consumer:
+      group-id: soundbox-notifications
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: hr.andrijasevic.soundbox.event
+        spring.json.value.default.type: hr.andrijasevic.soundbox.event.ListenLoggedEvent
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -21,8 +42,8 @@ spring:
     locations: classpath:db/migration
 
 jwt:
-  secret: moj-super-tajni-kljuc-koji-mora-biti-dovoljno-dugacak-za-hs256
-  expiration: 86400000
+  secret: ${JWT_SECRET:moj-super-tajni-kljuc-koji-mora-biti-dovoljno-dugacak-za-hs256}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 musicbrainz:
   base-url: https://musicbrainz.org/ws/2
@@ -39,3 +60,63 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: soundbox
+    description: A sonic memory log — every listener is a curator
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173  # comma-separated; override in prod (APP_CORS_ALLOWED_ORIGINS)
+  rate-limit:
+    enabled: true
+    auth-capacity: 10          # burst of 10 auth requests per IP
+    auth-refill-per-minute: 10 # replenished at 10/min
+  events:
+    enabled: true              # publish listen-logged events to Kafka
+
+resilience4j:
+  circuitbreaker:
+    # health indicator off so an external-API outage doesn't fail the app's own healthcheck;
+    # circuit state is still exported to metrics/prometheus
+    configs:
+      default:
+        register-health-indicator: false
+        sliding-window-size: 10
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      musicbrainz:
+        base-config: default
+      itunes:
+        base-config: default
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        ignore-exceptions:
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+    instances:
+      musicbrainz:
+        base-config: default
+      itunes:
+        base-config: default

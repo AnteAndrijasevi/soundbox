@@ -62,4 +62,12 @@ public class ListenLogController {
     ) {
         return ResponseEntity.ok(listenLogService.getRelistenHistory(userId, mbid));
     }
+
+    // "One year ago" nudge — albums the user logged ~365 days ago, a retention hook.
+
+    @GetMapping("/api/users/me/relisten-nudges")
+    public ResponseEntity<List<ListenLogDto>> getMyRelistenNudges() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(listenLogService.getRelistenNudges(email));
+    }
 }

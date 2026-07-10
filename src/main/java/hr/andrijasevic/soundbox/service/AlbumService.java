@@ -3,9 +3,11 @@ package hr.andrijasevic.soundbox.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hr.andrijasevic.soundbox.domain.Album;
 import hr.andrijasevic.soundbox.domain.Artist;
+import hr.andrijasevic.soundbox.config.CacheConfig;
 import hr.andrijasevic.soundbox.dto.AlbumDto;
 import hr.andrijasevic.soundbox.external.itunes.ITunesClient;
 import hr.andrijasevic.soundbox.external.musicbrainz.MusicBrainzClient;
+import org.springframework.cache.annotation.Cacheable;
 import hr.andrijasevic.soundbox.external.musicbrainz.dto.ArtistCreditDto;
 import hr.andrijasevic.soundbox.external.musicbrainz.dto.GenreDto;
 import hr.andrijasevic.soundbox.external.musicbrainz.dto.MusicBrainzAlbumResponse;
@@ -44,6 +46,7 @@ public class AlbumService {
         this.objectMapper = objectMapper;
     }
 
+    @Cacheable(value = CacheConfig.ALBUM_SEARCH_CACHE, key = "#query + ':' + #limit + ':' + #offset")
     public List<AlbumDto> searchAlbums(String query, int limit, int offset) {
         MusicBrainzSearchResponse response = musicBrainzClient.searchAlbums(query, limit, offset);
         if (response.getReleases() == null) {

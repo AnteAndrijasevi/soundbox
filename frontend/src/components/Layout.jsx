@@ -1,9 +1,27 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { getUnreadCount } from '../api';
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = () =>
+      getUnreadCount()
+        .then(({ data }) => !cancelled && setUnread(data.count))
+        .catch(() => {});
+    refresh();
+    const id = setInterval(refresh, 20000); // light polling
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [location.pathname]); // re-check after navigating (e.g. away from notifications)
 
   const handleLogout = () => {
     logout();
@@ -25,6 +43,13 @@ export default function Layout() {
           </NavLink>
           <NavLink to="/lists" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
             Lists
+          </NavLink>
+          <NavLink
+            to="/notifications"
+            className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+          >
+            Notifications
+            {unread > 0 && <span className="nav-badge">{unread}</span>}
           </NavLink>
           <div className="nav-spacer" />
           <NavLink

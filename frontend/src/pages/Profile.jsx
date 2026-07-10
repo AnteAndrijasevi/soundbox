@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getUser, getUserReviews, getUserLog, getMyLog, getUserLists, toggleFollow, updateBio } from '../api';
+import {
+  getUser,
+  getUserReviews,
+  getUserLog,
+  getMyLog,
+  getUserLists,
+  getRelistenNudges,
+  toggleFollow,
+  updateBio,
+} from '../api';
 import { useAuth } from '../auth/AuthContext';
 import ReviewCard from '../components/ReviewCard';
 import LogEntry from '../components/LogEntry';
+import RelistenNudge from '../components/RelistenNudge';
 import Pagination from '../components/Pagination';
 
 export default function Profile() {
@@ -24,6 +34,7 @@ export default function Profile() {
   const [reviews, setReviews] = useState(null);
   const [reviewPage, setReviewPage] = useState(0);
   const [lists, setLists] = useState(null);
+  const [nudges, setNudges] = useState([]);
 
   const loadProfile = useCallback(() => {
     getUser(userId)
@@ -38,10 +49,19 @@ export default function Profile() {
     setLog(null);
     setReviews(null);
     setLists(null);
+    setNudges([]);
     setLogPage(0);
     setReviewPage(0);
     loadProfile();
   }, [userId, loadProfile]);
+
+  useEffect(() => {
+    // "one year ago" nudge only makes sense on your own profile
+    if (!isOwn) return;
+    getRelistenNudges()
+      .then(({ data }) => setNudges(data))
+      .catch(() => setNudges([]));
+  }, [userId, isOwn]);
 
   useEffect(() => {
     const fetchLog = isOwn ? getMyLog(logPage) : getUserLog(userId, logPage);
@@ -138,6 +158,8 @@ export default function Profile() {
           </button>
         )}
       </div>
+
+      {isOwn && <RelistenNudge nudges={nudges} />}
 
       <div className="tabs">
         <button className={`tab${tab === 'log' ? ' active' : ''}`} onClick={() => setTab('log')}>

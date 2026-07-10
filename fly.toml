@@ -1,0 +1,35 @@
+# Fly.io deployment for the Soundbox backend (Docker).
+# `app` is a placeholder — `fly launch` will set your unique name. See DEPLOY.md.
+app = "soundbox"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SPRING_PROFILES_ACTIVE = "json"
+  SERVER_PORT = "8080"
+  JAVA_TOOL_OPTIONS = "-XX:MaxRAMPercentage=75"
+  # This deploy runs on Postgres alone. Redis and Kafka are optional extras —
+  # provision them (see DEPLOY.md) and flip these to light up caching / events.
+  SPRING_CACHE_TYPE = "none"
+  APP_EVENTS_ENABLED = "false"
+  SPRING_KAFKA_LISTENER_AUTO_STARTUP = "false"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "45s"
+    method = "GET"
+    path = "/actuator/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"

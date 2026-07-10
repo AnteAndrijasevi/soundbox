@@ -136,6 +136,22 @@ select:focus {
   flex: 1;
 }
 
+.nav-badge {
+  display: inline-block;
+  margin-left: 5px;
+  min-width: 17px;
+  padding: 0 5px;
+  height: 17px;
+  line-height: 17px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
 .page {
   max-width: 960px;
   margin: 0 auto;
@@ -425,6 +441,65 @@ select:focus {
 .byline a {
   color: var(--accent-deep);
   font-weight: 600;
+}
+
+/* ----- one year ago nudge ----- */
+
+.nudge {
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(180deg, var(--accent-soft), var(--card));
+  border-color: var(--accent-soft);
+}
+
+.nudge-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.nudge-kicker {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--accent-deep);
+}
+
+.nudge-sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.nudge-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.nudge-item {
+  flex: 0 0 84px;
+  width: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.12s;
+}
+
+.nudge-item:hover {
+  transform: translateY(-2px);
+}
+
+.nudge-title {
+  font-size: 12px;
+  line-height: 1.25;
+  color: var(--ink-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ----- then vs now ----- */

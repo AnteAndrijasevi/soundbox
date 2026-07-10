@@ -1,17 +1,20 @@
+# Integration tests run against a real PostgreSQL provided by Testcontainers
+# (@ServiceConnection in TestcontainersConfiguration). The datasource is supplied by
+# the container; Flyway migrations, `ddl-auto: validate` and the Postgres dialect are
+# inherited from the base application.yml — no H2 approximation here.
+jwt:
+  secret: test-secret-key-that-is-at-least-256-bits-long-for-testing-purposes
+  expiration: 86400000
+
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    database-platform: org.hibernate.dialect.H2Dialect
-  flyway:
-    enabled: false
+  cache:
+    type: none   # no Redis in tests; @Cacheable becomes a no-op
+  kafka:
+    listener:
+      auto-startup: false   # don't try to reach a broker in tests
 
 app:
-  jwt:
-    secret: test-secret-key-that-is-at-least-256-bits-long-for-testing-purposes
-    expiration-ms: 86400000
+  rate-limit:
+    enabled: false   # integration tests share 127.0.0.1 and would trip the limit
+  events:
+    enabled: false   # no Kafka publishing in tests (consumer logic is unit-tested directly)

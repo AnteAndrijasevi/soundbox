@@ -9,6 +9,7 @@ import Profile from './pages/Profile';
 import Feed from './pages/Feed';
 import Lists from './pages/Lists';
 import ListDetail from './pages/ListDetail';
+import Notifications from './pages/Notifications';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/users/:userId" element={<Profile />} />
           <Route path="/lists" element={<Lists />} />
           <Route path="/lists/:listId" element={<ListDetail />} />
+          <Route path="/notifications" element={<Notifications />} />
         </Route>
       </Route>
     </Routes>
