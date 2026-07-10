@@ -74,6 +74,23 @@
             <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- Caching: Redis-backed Spring Cache for external lookups -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- Rate limiting on auth endpoints -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>8.7.0</version>
+        </dependency>
+
         <!-- Resilience: circuit breaker + retry around external API calls -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>

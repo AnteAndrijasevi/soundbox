@@ -5,3 +5,11 @@
 jwt:
   secret: test-secret-key-that-is-at-least-256-bits-long-for-testing-purposes
   expiration: 86400000
+
+spring:
+  cache:
+    type: none   # no Redis in tests; @Cacheable becomes a no-op
+
+app:
+  rate-limit:
+    enabled: false   # integration tests share 127.0.0.1 and would trip the limit

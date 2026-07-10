@@ -7,6 +7,11 @@ spring:
     username: soundbox
     password: soundbox
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -58,6 +63,12 @@ info:
   app:
     name: soundbox
     description: A sonic memory log — every listener is a curator
+
+app:
+  rate-limit:
+    enabled: true
+    auth-capacity: 10          # burst of 10 auth requests per IP
+    auth-refill-per-minute: 10 # replenished at 10/min
 
 resilience4j:
   circuitbreaker:

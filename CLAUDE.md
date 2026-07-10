@@ -42,7 +42,11 @@ the real Flyway migrations run and Hibernate validates the schema — production
 
 - Controllers are thin; auth identity comes from `SecurityContextHolder` (JWT subject = email).
 - `AlbumService.getAlbum(mbid)` caches albums 7 days (`lastFetchedAt`), refreshes from
-  MusicBrainz and looks up iTunes artwork on refresh. Search results are never persisted.
+  MusicBrainz and looks up iTunes artwork on refresh. Search results are not persisted but
+  are **Redis-cached** 1h (`@Cacheable` on `AlbumService.searchAlbums`); cache failures
+  degrade to no-cache via a `CacheErrorHandler`, so the app runs even if Redis is down.
+- `/api/auth/**` is rate-limited per IP (Bucket4j, `AuthRateLimitFilter`) → 429 over the
+  limit; configurable via `app.rate-limit.*`, disabled in the test profile.
 - `Album.tracklist` stores raw MusicBrainz media JSON (`[{tracks:[{number,title,length}]}]`);
   frontend parses it in `src/constants.js`.
 - iTunes responds with `Content-Type: text/javascript` — `ITunesClient` fetches the body
@@ -93,7 +97,7 @@ the real Flyway migrations run and Hibernate validates the schema — production
    under the `json` profile; `CorrelationIdFilter` → `X-Correlation-Id` in MDC + response)
 4. ~~Testcontainers (real Postgres) for integration tests~~ (done: `feat/testcontainers`)
 5. ~~Resilience4j (circuit breaker + retry) around MusicBrainz/iTunes + CAA redirect fix~~ (done: `feat/resilience`)
-6. Redis cache (Spring Cache) for external lookups + Bucket4j rate limiting on auth
+6. ~~Redis cache (Spring Cache) for search + Bucket4j rate limiting on auth~~ (done: `feat/cache-ratelimit`)
 7. Multi-stage Dockerfile + docker-compose (app + Postgres + Redis + Kafka)
 8. GitHub Actions CI (build + test)
 9. Kafka event-driven: listen logged → event → consumer builds feed/notifications
