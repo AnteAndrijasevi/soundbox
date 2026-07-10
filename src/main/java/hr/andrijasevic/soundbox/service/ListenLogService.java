@@ -5,10 +5,13 @@ import hr.andrijasevic.soundbox.domain.ListenLog;
 import hr.andrijasevic.soundbox.domain.User;
 import hr.andrijasevic.soundbox.dto.ListenLogDto;
 import hr.andrijasevic.soundbox.dto.ListenLogRequest;
+import hr.andrijasevic.soundbox.event.ListenEventPublisher;
+import hr.andrijasevic.soundbox.event.ListenLoggedEvent;
 import hr.andrijasevic.soundbox.exception.ResourceNotFoundException;
 import hr.andrijasevic.soundbox.repository.AlbumRepository;
 import hr.andrijasevic.soundbox.repository.ListenLogRepository;
 import hr.andrijasevic.soundbox.repository.UserRepository;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,17 +27,20 @@ public class ListenLogService {
     private final AlbumRepository albumRepository;
     private final AlbumService albumService;
     private final ListenLogRepository listenLogRepository;
+    private final ObjectProvider<ListenEventPublisher> eventPublisher;
 
     public ListenLogService(
             UserRepository userRepository,
             AlbumRepository albumRepository,
             AlbumService albumService,
-            ListenLogRepository listenLogRepository
+            ListenLogRepository listenLogRepository,
+            ObjectProvider<ListenEventPublisher> eventPublisher
     ) {
         this.userRepository = userRepository;
         this.albumRepository = albumRepository;
         this.albumService = albumService;
         this.listenLogRepository = listenLogRepository;
+        this.eventPublisher = eventPublisher;
     }
 
 
@@ -91,6 +97,11 @@ public class ListenLogService {
         listenLog.setFavoriteTrack(request.favoriteTrack());
 
         ListenLog saved = listenLogRepository.save(listenLog);
+
+        // fan out asynchronously via Kafka (no-op if event publishing is disabled)
+        eventPublisher.ifAvailable(publisher -> publisher.publish(new ListenLoggedEvent(
+                user.getId(), user.getDisplayUsername(), album.getMbid(), album.getTitle())));
+
         return mapToDto(saved);
     }
 

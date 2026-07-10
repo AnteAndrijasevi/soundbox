@@ -7,6 +7,7 @@ import hr.andrijasevic.soundbox.domain.Mood;
 import hr.andrijasevic.soundbox.domain.User;
 import hr.andrijasevic.soundbox.dto.ListenLogDto;
 import hr.andrijasevic.soundbox.dto.ListenLogRequest;
+import hr.andrijasevic.soundbox.event.ListenEventPublisher;
 import hr.andrijasevic.soundbox.repository.AlbumRepository;
 import hr.andrijasevic.soundbox.repository.ListenLogRepository;
 import hr.andrijasevic.soundbox.repository.UserRepository;
@@ -17,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,6 +45,8 @@ class ListenLogServiceTest {
     private AlbumService albumService;
     @Mock
     private ListenLogRepository listenLogRepository;
+    @Mock
+    private ObjectProvider<ListenEventPublisher> eventPublisher;
 
     @InjectMocks
     private ListenLogService listenLogService;

@@ -9,7 +9,12 @@ jwt:
 spring:
   cache:
     type: none   # no Redis in tests; @Cacheable becomes a no-op
+  kafka:
+    listener:
+      auto-startup: false   # don't try to reach a broker in tests
 
 app:
   rate-limit:
     enabled: false   # integration tests share 127.0.0.1 and would trip the limit
+  events:
+    enabled: false   # no Kafka publishing in tests (consumer logic is unit-tested directly)

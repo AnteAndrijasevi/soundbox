@@ -91,6 +91,12 @@
             <version>8.7.0</version>
         </dependency>
 
+        <!-- Event streaming: listen-logged events -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <!-- Resilience: circuit breaker + retry around external API calls -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>

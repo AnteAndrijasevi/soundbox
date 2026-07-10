@@ -12,6 +12,22 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        max.block.ms: 3000   # fail fast instead of blocking the request if the broker is down
+    consumer:
+      group-id: soundbox-notifications
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: hr.andrijasevic.soundbox.event
+        spring.json.value.default.type: hr.andrijasevic.soundbox.event.ListenLoggedEvent
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -69,6 +85,8 @@ app:
     enabled: true
     auth-capacity: 10          # burst of 10 auth requests per IP
     auth-refill-per-minute: 10 # replenished at 10/min
+  events:
+    enabled: true              # publish listen-logged events to Kafka
 
 resilience4j:
   circuitbreaker:
