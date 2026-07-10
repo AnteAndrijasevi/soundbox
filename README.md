@@ -44,6 +44,10 @@ docker compose up --build   # app + Postgres + Redis, on http://localhost:8080
 
 Swagger UI at `/swagger-ui.html`, health at `/actuator/health`.
 
+### Deploy
+
+See [DEPLOY.md](./DEPLOY.md) for a Fly.io walkthrough (Docker deploy, Postgres, live Swagger UI).
+
 ### Or run the pieces yourself
 
 You'll need Docker (or Postgres running some other way), a JDK, and Node.

@@ -108,4 +108,5 @@ the real Flyway migrations run and Hibernate validates the schema — production
 8. ~~GitHub Actions CI (build + test)~~ (done: `feat/ci` — `.github/workflows/ci.yml`,
    `mvnw verify` on JDK 21 + Docker image build; Testcontainers runs in CI with no extra config)
 9. ~~Kafka event-driven: listen logged → event → consumer builds notifications~~ (done: `feat/kafka`)
-10. Fly.io deploy config + instructions (final authenticated deploy is the user's)
+10. ~~Fly.io deploy config + instructions~~ (done: `feat/deploy` — `fly.toml` + `DEPLOY.md`;
+    runs on Postgres alone, Redis/Kafka optional. Final `fly deploy` is the user's to run.)
