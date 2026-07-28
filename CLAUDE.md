@@ -18,25 +18,35 @@ Letterboxd-style app for music albums: search albums, log listens with mood/cont
 # PostgreSQL (docker via colima)
 colima start && docker start soundbox-pg   # user/pass/db: soundbox
 
-# Backend — needs JDK ≤ 23 (default JDK 26 breaks Lombok annotation processing)
-JAVA_HOME=$(/usr/libexec/java_home -v 23) ./mvnw spring-boot:run   # :8080
+# Backend — use JDK 21 (matches CI; pom targets 17).
+# Avoid JDK 24+: Lombok's annotation processing breaks.
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./mvnw spring-boot:run   # :8080
 
 # Frontend
 npm run dev --prefix frontend   # :5173, /api proxied to :8080
 ```
 
-Tests: `JAVA_HOME=$(/usr/libexec/java_home -v 23) ./mvnw test`. Service-layer unit tests
+Tests: `JAVA_HOME=$(/usr/libexec/java_home -v 21) ./mvnw verify`. Service-layer unit tests
 (Mockito) per service, plus `integration/` MockMvc tests covering auth, review
 upsert/validation, listen log, follow/feed/like, and correlation-id flows (external HTTP
 clients mocked via `@MockitoBean` in `BaseIntegrationTest`). Integration tests run against a
 **real PostgreSQL via Testcontainers** (`TestcontainersConfiguration`, `@ServiceConnection`):
 the real Flyway migrations run and Hibernate validates the schema — production parity, no H2.
 
-- **CI / Docker Desktop**: `./mvnw test` works with no extra config.
-- **Local colima**: put `docker.host=unix:///Users/<you>/.colima/default/docker.sock` in
-  `~/.testcontainers.properties`, then run
-  `DOCKER_API_VERSION=1.43 TESTCONTAINERS_RYUK_DISABLED=true ./mvnw test`
-  (colima's Docker requires API ≥ 1.40, and Ryuk can't bind-mount the colima socket).
+There is no failsafe plugin and no surefire excludes, so `./mvnw test` runs the integration
+tests too. `verify` is the documented command because CI uses it and it is a superset.
+
+- **CI / Docker Desktop**: `./mvnw verify` works with no extra config.
+- **Local colima**: `DOCKER_API_VERSION` does **not** work — docker-java ignores the env var
+  and still negotiates API 1.32, which colima rejects. Pass the system property instead:
+
+  ```bash
+  export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock
+  export TESTCONTAINERS_RYUK_DISABLED=true   # Ryuk can't bind-mount the colima socket
+  ./mvnw -B verify -DargLine="-Dapi.version=1.43"
+  ```
+
+  `DOCKER_HOST` replaces `~/.testcontainers.properties`; there is no need for both.
 
 ## Architecture notes
 
@@ -58,6 +68,29 @@ the real Flyway migrations run and Hibernate validates the schema — production
   handling, and the CAA fix are all now on the maturity-wave branches.)
 - Frontend `AlbumCover` component falls back: `artworkUrl` → `coverArtUrl` → CAA by-mbid URL
   → placeholder. Review/log/list DTO mappers coalesce artwork (iTunes preferred).
+- Review DTOs go through one shared `ReviewMapper` (`mapper/` package). **Never reintroduce a
+  private `mapToDto` in a service** — there used to be two byte-identical copies in
+  `ReviewService` and `FollowService`, each counting likes per row (N+1).
+  `ReviewMapper.toDtoPage(Page<Review>)` resolves a whole page's like counts with one grouped
+  aggregate (`LikeRepository.countLikesForReviews` → `ReviewLikeCount` projection), and the
+  page-returning `ReviewRepository` finders carry `@EntityGraph({"user", "album"})` so both
+  `@ManyToOne` sides come back on the same join, pagination still in the database.
+  `FollowFeedIntegrationTest` pins the prepared-statement count via Hibernate `Statistics`
+  (`hibernate.generate_statistics` is enabled in `application-test.yml`).
+- **`spring.jpa.open-in-view` is `true` and the app currently depends on it.** Almost nothing
+  in the service layer is `@Transactional`, so without OSIV every entity detaches the moment a
+  repository call returns. Confirmed broken with `open-in-view: false`:
+  `AlbumService.mapAlbumEntityToDto` (Artist proxy, cache-hit path),
+  `ListenLogService.mapToDto` (Album + Artist proxies), `UserListService.mapToDto`
+  (User proxy) — about seven endpoints in total. `GET /api/feed` stays clean thanks to the
+  entity graph above. Turning OSIV off requires `@Transactional(readOnly = true)` on the read
+  paths of those three services first.
+- **`BaseIntegrationTest` is `@Transactional`.** The test's transaction holds one persistence
+  context open across the whole request. Two consequences: lazy loads get deduped, so query
+  counts measured in tests are lower than in production; and these tests are structurally
+  incapable of detecting an OSIV dependency — `open-in-view: false` makes the entire suite
+  pass while production endpoints break. Verify any OSIV change with a throwaway
+  non-transactional probe test, not the suite.
 - Ratings are 0.5–5.0 (DB CHECK + bean validation). Reviews upsert per (user, album).
 - Listen logs are append-only (the diary). "Then vs Now" reads them via
   `GET /api/users/{id|me}/albums/{mbid}/history` (oldest-first); the frontend
@@ -80,7 +113,7 @@ the real Flyway migrations run and Hibernate validates the schema — production
 - One feature per `feat/*` branch, small commits, merged via PR (see git history).
 - Flyway migrations `V<N>__description.sql` in `src/main/resources/db/migration`;
   `ddl-auto: validate` — every entity change needs a migration.
-- After each phase: `./mvnw test` green and the app boots.
+- After each phase: `./mvnw verify` green and the app boots.
 
 ## Roadmap (agreed priorities)
 
@@ -111,3 +144,14 @@ the real Flyway migrations run and Hibernate validates the schema — production
 9. ~~Kafka event-driven: listen logged → event → consumer builds notifications~~ (done: `feat/kafka`)
 10. ~~Fly.io deploy config + instructions~~ (done: `feat/deploy` — `fly.toml` + `DEPLOY.md`;
     runs on Postgres alone, Redis/Kafka optional. Final `fly deploy` is the user's to run.)
+11. ~~N+1 on review pages and the follow feed~~ (done: shared `ReviewMapper`, batched like
+    counts, `@EntityGraph`; feed page cost is now constant in row count, pinned by a test)
+
+### Next up
+
+- `@Transactional(readOnly = true)` on the read paths of `AlbumService`, `ListenLogService`
+  and `UserListService`, then flip `spring.jpa.open-in-view: false`.
+- `FollowService.getFeed` re-queries the user by email even though `JwtAuthFilter` already
+  holds the `User` as the security principal — one redundant query per request.
+- `listen_logs.mood` / `.context` are unconstrained `VARCHAR(50)` while `rating` has a DB
+  CHECK. Either add a CHECK migration or commit to free-form descriptors — currently neither.
